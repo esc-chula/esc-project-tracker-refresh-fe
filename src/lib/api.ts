@@ -104,3 +104,27 @@ export async function getProjects(cookieHeader: string): Promise<Project[]> {
     return [];
   }
 }
+
+export async function getProjectById(cookieHeader: string, projectId: string): Promise<Project | null> {
+  if (!cookieHeader || !projectId) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${apiBaseURL}/api/v1/projects/${projectId}`, {
+      cache: "no-store",
+      headers: {
+        Cookie: cookieHeader
+      }
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as { project?: Project };
+    return payload.project ?? null;
+  } catch {
+    return null;
+  }
+}
