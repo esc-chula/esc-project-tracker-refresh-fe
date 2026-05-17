@@ -63,11 +63,28 @@ button {
 
 .lede {
   max-width: 40rem;
-  margin: 1.5rem 0 2rem;
+  margin: 1.5rem 0 1.5rem;
   color: var(--muted);
   font-family: ui-sans-serif, system-ui, sans-serif;
   font-size: clamp(1rem, 2vw, 1.25rem);
   line-height: 1.7;
+}
+
+.loginLink {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--accent-strong);
+  border-radius: 999px;
+  color: #fffaf1;
+  background: var(--accent-strong);
+  box-shadow: 0 18px 45px rgba(23, 62, 51, 0.22);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
 }
 
 .panel {
@@ -97,4 +114,130 @@ button {
 
 .panel small {
   color: var(--muted);
+}
+
+.dashboard {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.dashboardHeader {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.workspace {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+  align-items: start;
+}
+
+.composer,
+.projectFeed {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  box-shadow: 0 24px 70px rgba(31, 37, 34, 0.12);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+.sectionEyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.composer label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.composer span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.composer input,
+.composer textarea {
+  width: 100%;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: #fffef9;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.composer textarea {
+  resize: vertical;
+}
+
+.composer .loginLink {
+  margin-bottom: 0;
+}
+
+.formMessage {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.formMessage.error {
+  color: #9a2f25;
+}
+
+.formMessage.success {
+  color: var(--accent);
+}
+
+.projectFeed {
+  align-content: start;
+}
+
+.projectCard {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--line);
+  border-radius: 1.15rem;
+  background: rgba(255, 250, 241, 0.82);
+}
+
+.projectCard h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.projectCard p {
+  margin: 0;
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.projectMeta,
+.projectFacts {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
 }
