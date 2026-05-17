@@ -1,0 +1,13 @@
+.env
+.env.local
+.next/
+node_modules/
+out/
+coverage/
+.cache/
+.localappdata/
+.pnpm-store/
+.tmp/
+*.log
+*.tsbuildinfo
+next-env.d.ts
