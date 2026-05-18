@@ -27,10 +27,10 @@ export function ProfileMenu({ currentUser }: { currentUser: CurrentUser }) {
     <div className="relative">
       <button className="flex items-center gap-3" onClick={() => setOpen((current) => !current)} type="button">
         <div className="min-w-0 text-right">
-          <div className="max-w-[220px] truncate text-[17px] font-medium leading-tight text-black">
+          <div className="max-w-[220px] truncate text-base font-medium leading-tight text-black">
             {currentUser.displayName || currentUser.email}
           </div>
-          <div className="mt-1 text-[15px] leading-tight text-gray-500">{roleLabel}</div>
+          <div className="mt-1 text-sm leading-tight text-gray-500">{roleLabel}</div>
         </div>
         <ChevronDown className="h-5 w-5 text-black" />
       </button>
@@ -38,7 +38,7 @@ export function ProfileMenu({ currentUser }: { currentUser: CurrentUser }) {
       {open ? (
         <div className="absolute right-0 top-[calc(100%+12px)] z-20 min-w-[180px] rounded-2xl border border-gray-200 bg-white p-2 shadow-lg">
           <Link
-            className="block rounded-xl px-4 py-3 text-[15px] font-medium text-black transition hover:bg-gray-50"
+            className="block rounded-xl px-4 py-3 text-sm font-medium text-black transition hover:bg-gray-50"
             href={logoutURL}
             onClick={() => setOpen(false)}
           >

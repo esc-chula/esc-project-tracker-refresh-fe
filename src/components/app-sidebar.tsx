@@ -28,7 +28,7 @@ export function AppSidebar() {
       <div className="flex w-full flex-col">
         <div className="flex flex-col items-center gap-4 px-5">
           <Image alt="ESC" height={72} src="/icons/esc.svg" width={56} />
-          <div className="text-center text-[17px] font-semibold">Document System</div>
+          <div className="text-center text-base font-semibold">Document System</div>
           <div className="mt-3 h-px w-full bg-white/70" />
         </div>
 
@@ -38,7 +38,7 @@ export function AppSidebar() {
             const content = (
               <div
                 className={cn(
-                  "flex items-center gap-3 rounded-[14px] px-4 py-3 text-[17px] font-medium leading-none transition-colors",
+                  "flex items-center gap-3 rounded-[14px] px-4 py-3 text-base font-medium leading-none transition-colors",
                   active ? "bg-white text-red-700" : "text-white",
                   !active && !item.disabled && "hover:bg-white/10",
                   item.disabled && "cursor-not-allowed opacity-45"

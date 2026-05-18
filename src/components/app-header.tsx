@@ -15,7 +15,7 @@ export function AppHeader({
 
   return (
     <header className="flex flex-col gap-5 xl:min-h-[56px] xl:flex-row xl:items-center xl:justify-between">
-      <div className="flex items-center gap-4 text-[32px] font-bold text-carmine md:text-[40px]">
+      <div className="flex items-center gap-4 text-3xl font-bold text-carmine md:text-4xl">
         <span className="text-carmine">{titleIcon}</span>
         <h1>{title}</h1>
       </div>
@@ -24,7 +24,7 @@ export function AppHeader({
         {currentUser ? (
           <ProfileMenu currentUser={currentUser} />
         ) : (
-          <Button asChild className="h-[46px] rounded-2xl bg-red-700 px-6 text-[16px] font-semibold text-white hover:bg-red-800">
+          <Button asChild className="h-[46px] rounded-2xl bg-red-700 px-6 text-base font-semibold text-white hover:bg-red-800">
             <a href={loginURL}>เข้าสู่ระบบ</a>
           </Button>
         )}

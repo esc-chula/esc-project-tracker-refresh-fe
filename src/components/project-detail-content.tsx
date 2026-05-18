@@ -109,58 +109,58 @@ export function ProjectDetailContent({
       <section className="rounded-3xl bg-gray-50 p-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <div className="text-[28px] font-bold text-black">
+            <div className="text-3xl font-bold text-black">
               {project.name || (mode === "create" ? "เปิดโครงการใหม่" : "โครงการ")}
             </div>
-            <div className="mt-2 text-[15px] text-gray-500">{project.projectCode || "ไม่มีรหัสโครงการ"}</div>
+            <div className="mt-2 text-sm text-gray-500">{project.projectCode || "ไม่มีรหัสโครงการ"}</div>
           </div>
-          <div className="rounded-full bg-gray-100 px-4 py-2 text-[14px] text-carmine">{project.status || "draft"}</div>
+          <div className="rounded-full bg-gray-100 px-4 py-2 text-sm text-carmine">{project.status || "draft"}</div>
         </div>
 
         <form className="grid grid-cols-1 gap-4 xl:grid-cols-2" onSubmit={handleSubmit}>
           <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-[15px] text-black"
+            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
             value={project.projectCode}
             onChange={(event) => updateField("projectCode", event.target.value)}
             placeholder="รหัสโครงการ"
           />
           <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-[15px] text-black"
+            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
             value={project.status}
             onChange={(event) => updateField("status", event.target.value)}
             placeholder="สถานะ"
             readOnly={mode === "create"}
           />
           <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-[15px] text-black xl:col-span-2"
+            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black xl:col-span-2"
             value={project.name}
             onChange={(event) => updateField("name", event.target.value)}
             placeholder="ชื่อโครงการ"
           />
           <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-[15px] text-black"
+            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
             value={project.type}
             onChange={(event) => updateField("type", event.target.value)}
             placeholder="ประเภทโครงการ"
           />
           <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-[15px] text-black"
+            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
             type="date"
             value={project.reserveDate || ""}
             onChange={(event) => updateField("reserveDate", event.target.value)}
           />
           <textarea
-            className="min-h-[140px] rounded-xl border border-gray-300 bg-white px-4 py-3 text-[15px] text-black outline-none xl:col-span-2"
+            className="min-h-[140px] rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-black outline-none xl:col-span-2"
             value={project.detail}
             onChange={(event) => updateField("detail", event.target.value)}
             placeholder="รายละเอียดโครงการ"
           />
           <div className="flex items-center gap-4 xl:col-span-2">
-            <Button className="h-12 rounded-xl bg-carmine px-8 text-[15px] text-white hover:bg-carmine/90" disabled={isPending} type="submit">
+            <Button className="h-12 rounded-xl bg-carmine px-8 text-sm text-white hover:bg-carmine/90" disabled={isPending} type="submit">
               {isPending ? (mode === "create" ? "กำลังเปิดโครงการ..." : "กำลังบันทึก...") : mode === "create" ? "เปิดโครงการใหม่" : "บันทึกข้อมูล"}
             </Button>
-            {successMessage ? <div className="text-[14px] font-medium text-green-700">{successMessage}</div> : null}
-            {errorMessage ? <div className="text-[14px] font-medium text-red-700">{errorMessage}</div> : null}
+            {successMessage ? <div className="text-sm font-medium text-green-700">{successMessage}</div> : null}
+            {errorMessage ? <div className="text-sm font-medium text-red-700">{errorMessage}</div> : null}
           </div>
         </form>
       </section>
