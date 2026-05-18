@@ -24,7 +24,7 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-full flex-none rounded-[var(--content-radius)] bg-[#6f1018] px-5 py-7 text-white xl:min-h-[calc(100vh-(var(--shell-padding)*2))] xl:w-[var(--sidebar-width)] xl:px-7 xl:py-9">
+    <aside className="flex w-full flex-none rounded-[var(--content-radius)] bg-carmine px-5 py-7 text-white xl:min-h-[calc(100vh-(var(--shell-padding)*2))] xl:w-[var(--sidebar-width)] xl:px-7 xl:py-9">
       <div className="flex w-full flex-col">
         <div className="flex flex-col items-center gap-4 px-5">
           <Image alt="ESC" height={72} src="/icons/esc.svg" width={56} />
@@ -39,7 +39,7 @@ export function AppSidebar() {
               <div
                 className={cn(
                   "flex items-center gap-3 rounded-[14px] px-4 py-3 text-[17px] font-medium leading-none transition-colors",
-                  active ? "bg-white text-[#d13333]" : "text-white",
+                  active ? "bg-white text-red-700" : "text-white",
                   !active && !item.disabled && "hover:bg-white/10",
                   item.disabled && "cursor-not-allowed opacity-45"
                 )}

@@ -17,6 +17,7 @@ const config: Config = {
     },
     extend: {
       colors: {
+        carmine: "#6f1018",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

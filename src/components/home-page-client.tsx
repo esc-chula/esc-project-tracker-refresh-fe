@@ -53,7 +53,7 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
       phone: "-",
       status: "ยังไม่เริ่ม",
       updatedAt: new Date(project.updatedAt).toLocaleDateString("th-TH"),
-      color: "text-zinc-400"
+      color: "text-gray-500"
     }));
   }, [currentUser, latestProjects]);
 
@@ -62,7 +62,7 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
       <div className="relative">
         <SearchIcon className="absolute left-5 top-1/2 h-6 w-6 -translate-y-1/2 text-black" />
         <Input
-          className="h-[60px] rounded-full border-0 bg-[#f1f2f7] pl-16 text-[17px] shadow-none placeholder:text-[#818181] focus-visible:ring-0"
+          className="h-[60px] rounded-full border-0 bg-gray-100 pl-16 text-[17px] text-black shadow-none placeholder:text-gray-500 focus-visible:ring-0"
           placeholder="ค้นหาโครงการหรือเอกสาร"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -72,7 +72,7 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
       <section>
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3 text-[22px] font-semibold text-black">
-            <FolderOpen className="h-6 w-6 text-[#6f1018]" />
+            <FolderOpen className="h-6 w-6 text-carmine" />
             <span>โครงการล่าสุด</span>
           </div>
           <Link className="flex items-center gap-2 text-[18px] text-black" href="/projects">
@@ -85,25 +85,25 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
             {latestProjects.map((project) => (
               <Link href={`/project/${project.id}`} key={project.id}>
-                <div className="rounded-2xl bg-[#f1f2f7] px-5 py-4 transition hover:bg-[#e9ebf3]">
+                <div className="rounded-2xl bg-gray-100 px-5 py-4 transition hover:bg-gray-200">
                   <div className="text-[24px] font-bold leading-none text-black">{project.projectCode || "NEW"}</div>
-                  <div className="mt-3 line-clamp-2 text-[15px] text-[#555]">{project.name}</div>
+                  <div className="mt-3 line-clamp-2 text-[15px] text-gray-700">{project.name}</div>
                 </div>
               </Link>
             ))}
           </div>
         ) : (
-          <div className="flex min-h-[120px] items-center justify-center text-center text-[18px] text-[#666]">ไม่พบโครงการ</div>
+          <div className="flex min-h-[120px] items-center justify-center text-center text-[18px] text-gray-500">ไม่พบโครงการ</div>
         )}
       </section>
 
       <section>
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3 text-[22px] font-semibold text-black">
-            <FileSearch className="h-6 w-6 text-[#6f1018]" />
+            <FileSearch className="h-6 w-6 text-carmine" />
             <span>เอกสารล่าสุด</span>
           </div>
-          <div className="flex items-center gap-2 text-[18px] text-black/60">
+          <div className="flex items-center gap-2 text-[18px] text-gray-500">
             ดูเอกสารทั้งหมด
             <ArrowRight className="h-6 w-6" />
           </div>
@@ -112,7 +112,7 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
         <div className="overflow-hidden rounded-2xl">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="border-b border-[#dddddd] text-[16px] font-semibold text-black">
+              <tr className="border-b border-gray-300 text-[16px] font-semibold text-black">
                 <th className="px-3 py-3">รหัสเอกสาร</th>
                 <th className="px-3 py-3">ชื่อโครงการ</th>
                 <th className="px-3 py-3">ชื่อเอกสาร</th>
@@ -125,19 +125,19 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
             <tbody>
               {documentRows.length > 0 ? (
                 documentRows.map((row) => (
-                  <tr className="border-b border-[#dddddd] text-[15px] text-black" key={row.code}>
+                  <tr className="border-b border-gray-300 text-[15px] text-black" key={row.code}>
                     <td className="px-3 py-4">{row.code}</td>
                     <td className="px-3 py-4">{row.projectName}</td>
                     <td className="px-3 py-4">{row.documentName}</td>
                     <td className="px-3 py-4">{row.owner}</td>
                     <td className="px-3 py-4">{row.phone}</td>
                     <td className={`${row.color} px-3 py-4 font-medium`}>{row.status}</td>
-                    <td className="px-3 py-4 text-[#666]">{row.updatedAt}</td>
+                    <td className="px-3 py-4 text-gray-500">{row.updatedAt}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td className="px-3 py-12 text-center text-[18px] text-[#666]" colSpan={7}>
+                  <td className="px-3 py-12 text-center text-[18px] text-gray-500" colSpan={7}>
                     ไม่พบเอกสาร
                   </td>
                 </tr>
