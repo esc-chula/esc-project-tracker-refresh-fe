@@ -3,7 +3,7 @@
 import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
-import { previewNextProjectCode, projectTypeOptions } from "@/lib/api";
+import { getProjectRoute, previewNextProjectCode, projectTypeOptions } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { CancelButton } from "@/components/ui/cancel-button";
 import { FormInput, FormSelect, FormTextarea } from "@/components/ui/form-fields";
@@ -150,9 +150,13 @@ export function NewProjectModal({ apiBaseURL, open, onClose }: NewProjectModalPr
           return;
         }
 
-        const payload = (await response.json()) as { project?: { id: string } };
+        const payload = (await response.json()) as {
+          project?: { id: string; projectCode: string };
+        };
         handleClose();
-        router.push(`/project/${payload.project?.id ?? ""}`);
+        if (payload.project) {
+          router.push(getProjectRoute(payload.project));
+        }
         router.refresh();
       } catch {
         setErrorMessage("ไม่สามารถเชื่อมต่อกับ API ได้");

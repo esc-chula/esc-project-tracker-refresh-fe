@@ -164,3 +164,8 @@ export async function previewNextProjectCode(projectType: string): Promise<strin
   const payload = (await response.json()) as { projectCode?: string };
   return payload.projectCode ?? "";
 }
+
+export function getProjectRoute(project: Pick<Project, "id" | "projectCode">): string {
+  const publicIdentifier = project.projectCode || project.id;
+  return `/project/${encodeURIComponent(publicIdentifier)}`;
+}

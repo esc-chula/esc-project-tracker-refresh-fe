@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { FolderOpen, Plus, Search as SearchIcon } from "lucide-react";
 import type { Project } from "@/lib/api";
+import { getProjectRoute } from "@/lib/api";
 import { NewProjectModal } from "@/components/new-project-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +48,7 @@ export function ProjectsPageContent({
           {projects.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
               {projects.map((project) => (
-                <Link href={`/project/${project.id}`} key={project.id}>
+                <Link href={getProjectRoute(project)} key={project.id}>
                   <div className="rounded-2xl bg-gray-100 px-5 py-5 transition hover:bg-gray-200">
                     <div className="flex items-center justify-between gap-3">
                       <div className="text-xl font-bold text-black">{project.projectCode || "NEW"}</div>

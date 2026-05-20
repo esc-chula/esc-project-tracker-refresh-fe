@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, FileSearch, FolderOpen, Search as SearchIcon } from "lucide-react";
-import type { CurrentUser, Project } from "@/lib/api";
+import { getProjectRoute, type CurrentUser, type Project } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 
 type HomePageClientProps = {
@@ -83,7 +83,7 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
         {latestProjects.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
             {latestProjects.map((project) => (
-              <Link href={`/project/${project.id}`} key={project.id}>
+              <Link href={getProjectRoute(project)} key={project.id}>
                 <div className="rounded-2xl bg-gray-100 px-5 py-4 transition hover:bg-gray-200">
                   <div className="text-2xl font-bold leading-none text-black">{project.projectCode || "NEW"}</div>
                   <div className="mt-3 line-clamp-2 text-sm text-gray-700">{project.name}</div>
