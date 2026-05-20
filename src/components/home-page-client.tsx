@@ -1,149 +1,116 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowRight, FileSearch, FolderOpen, Search as SearchIcon } from "lucide-react";
+import { FileSearch, FolderOpen } from "lucide-react";
 import { getProjectRoute, type CurrentUser, type Project } from "@/lib/api";
-import { Input } from "@/components/ui/input";
+import { getRecentItems, type RecentItem } from "@/lib/recent-items";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHead,
+  DataTableHeaderCell,
+  DataTableRow,
+  EmptyTableRow
+} from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageSearchBar } from "@/components/ui/page-search-bar";
+import { PageSectionHeader } from "@/components/ui/page-section-header";
+import { ProjectCard } from "@/components/project-card";
+import {
+  formatUpdatedAt,
+  getDocumentStatusClassName,
+  getDocumentStatusLabel,
+  getDocumentTypeLabel,
+  type DocumentExplorerRow
+} from "@/lib/document-view";
 
 type HomePageClientProps = {
   currentUser: CurrentUser | null;
   initialProjects: Project[];
-  googleLoginURL: string;
+  initialDocuments: DocumentExplorerRow[];
 };
 
-type DocumentRow = {
-  code: string;
-  projectName: string;
-  documentName: string;
-  owner: string;
-  phone: string;
-  status: string;
-  updatedAt: string;
-  color: string;
-};
-
-export function HomePageClient({ currentUser, initialProjects, googleLoginURL }: HomePageClientProps) {
+export function HomePageClient({ currentUser, initialProjects, initialDocuments }: HomePageClientProps) {
   const [query, setQuery] = useState("");
+  const [recentItems] = useState<RecentItem[]>(() => getRecentItems());
 
-  const filteredProjects = useMemo(() => {
-    const keyword = query.trim().toLowerCase();
-    if (!keyword) {
-      return initialProjects;
-    }
-
-    return initialProjects.filter((project) =>
-      [project.projectCode, project.name, project.type, project.detail].join(" ").toLowerCase().includes(keyword)
-    );
-  }, [initialProjects, query]);
-
-  const latestProjects = filteredProjects.slice(0, 4);
-
-  const documentRows = useMemo<DocumentRow[]>(() => {
-    if (!currentUser) {
-      return [];
-    }
-
-    return latestProjects.map((project, index) => ({
-      code: project.projectCode ? `${project.projectCode}-${String(index + 1).padStart(4, "0")}` : `DOC-${index + 1}`,
-      projectName: project.name,
-      documentName: "จะเริ่มใน Document MVP",
-      owner: currentUser.displayName || currentUser.email,
-      phone: "-",
-      status: "ยังไม่เริ่ม",
-      updatedAt: new Date(project.updatedAt).toLocaleDateString("th-TH"),
-      color: "text-gray-500"
-    }));
-  }, [currentUser, latestProjects]);
+  const latestProjects = useMemo(() => initialProjects.slice(0, 4), [initialProjects]);
 
   return (
     <div className="space-y-8">
-      <div className="relative">
-        <SearchIcon className="absolute left-5 top-1/2 h-6 w-6 -translate-y-1/2 text-black" />
-        <Input
-          className="h-[60px] rounded-full border-0 bg-gray-100 pl-16 text-base text-black shadow-none placeholder:text-gray-500 focus-visible:ring-0"
-          placeholder="ค้นหาโครงการหรือเอกสาร"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-      </div>
+      <PageSearchBar
+        emptyRecentText="ยังไม่มีรายการล่าสุด"
+        onChange={setQuery}
+        placeholder="ค้นหาโครงการหรือเอกสาร"
+        recentItems={recentItems}
+        searchScope="all"
+        value={query}
+      />
 
       <section>
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xl font-semibold text-black">
-            <FolderOpen className="h-6 w-6 text-black" />
-            <span>โครงการล่าสุด</span>
-          </div>
-          <Link className="flex items-center gap-2 text-lg text-black" href="/projects">
-            ดูโครงการทั้งหมด
-            <ArrowRight className="h-6 w-6" />
-          </Link>
-        </div>
+        <PageSectionHeader
+          href="/projects"
+          icon={<FolderOpen className="h-6 w-6 text-black" />}
+          linkLabel="ดูโครงการทั้งหมด"
+          title="โครงการล่าสุด"
+        />
 
         {latestProjects.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
             {latestProjects.map((project) => (
-              <Link href={getProjectRoute(project)} key={project.id}>
-                <div className="rounded-2xl bg-gray-100 px-5 py-4 transition hover:bg-gray-200">
-                  <div className="text-2xl font-bold leading-none text-black">{project.projectCode || "NEW"}</div>
-                  <div className="mt-3 line-clamp-2 text-sm text-gray-700">{project.name}</div>
-                </div>
-              </Link>
+              <ProjectCard
+                code={project.projectCode}
+                compact
+                href={getProjectRoute(project)}
+                key={project.id}
+                title={project.name}
+              />
             ))}
           </div>
         ) : (
-          <div className="flex min-h-[120px] items-center justify-center text-center text-lg text-gray-500">ไม่พบโครงการ</div>
+          <EmptyState className="min-h-[120px]">ไม่พบโครงการ</EmptyState>
         )}
       </section>
 
       <section>
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-xl font-semibold text-black">
-            <FileSearch className="h-6 w-6 text-black" />
-            <span>เอกสารล่าสุด</span>
-          </div>
-          <div className="flex items-center gap-2 text-lg text-gray-500">
-            ดูเอกสารทั้งหมด
-            <ArrowRight className="h-6 w-6" />
-          </div>
-        </div>
+        <PageSectionHeader
+          href="/documents"
+          icon={<FileSearch className="h-6 w-6 text-black" />}
+          linkLabel="ดูเอกสารทั้งหมด"
+          title="เอกสารล่าสุด"
+        />
 
-        <div className="overflow-hidden rounded-2xl">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-gray-300 text-base font-semibold text-black">
-                <th className="px-3 py-3">รหัสเอกสาร</th>
-                <th className="px-3 py-3">ชื่อโครงการ</th>
-                <th className="px-3 py-3">ชื่อเอกสาร</th>
-                <th className="px-3 py-3">นิสิตผู้รับผิดชอบ</th>
-                <th className="px-3 py-3">เบอร์โทรศัพท์</th>
-                <th className="px-3 py-3">สถานะ</th>
-                <th className="px-3 py-3">อัปเดตล่าสุด</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documentRows.length > 0 ? (
-                documentRows.map((row) => (
-                  <tr className="border-b border-gray-300 text-sm text-black" key={row.code}>
-                    <td className="px-3 py-4">{row.code}</td>
-                    <td className="px-3 py-4">{row.projectName}</td>
-                    <td className="px-3 py-4">{row.documentName}</td>
-                    <td className="px-3 py-4">{row.owner}</td>
-                    <td className="px-3 py-4">{row.phone}</td>
-                    <td className={`${row.color} px-3 py-4 font-medium`}>{row.status}</td>
-                    <td className="px-3 py-4 text-gray-500">{row.updatedAt}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td className="px-3 py-12 text-center text-lg text-gray-500" colSpan={7}>
-                    ไม่พบเอกสาร
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTable className="overflow-hidden rounded-2xl">
+          <DataTableHead>
+            <DataTableHeaderCell>รหัสเอกสาร</DataTableHeaderCell>
+            <DataTableHeaderCell>ชื่อโครงการ</DataTableHeaderCell>
+            <DataTableHeaderCell>ชื่อเอกสาร</DataTableHeaderCell>
+            <DataTableHeaderCell>นิสิตผู้รับผิดชอบ</DataTableHeaderCell>
+            <DataTableHeaderCell>เบอร์โทรศัพท์</DataTableHeaderCell>
+            <DataTableHeaderCell>สถานะ</DataTableHeaderCell>
+            <DataTableHeaderCell>อัปเดตล่าสุด</DataTableHeaderCell>
+          </DataTableHead>
+          <DataTableBody>
+            {initialDocuments.length > 0 ? (
+              initialDocuments.map((row) => (
+                <DataTableRow className="text-sm" key={row.id}>
+                  <DataTableCell>{row.projectCode}-{row.documentCode}</DataTableCell>
+                  <DataTableCell>{row.projectName}</DataTableCell>
+                  <DataTableCell>{row.name || getDocumentTypeLabel(row.type, row.subType)}</DataTableCell>
+                  <DataTableCell>{currentUser?.displayName || "-"}</DataTableCell>
+                  <DataTableCell>-</DataTableCell>
+                  <DataTableCell className={`${getDocumentStatusClassName(row.status)} font-medium`}>
+                    {getDocumentStatusLabel(row.status)}
+                  </DataTableCell>
+                  <DataTableCell className="text-gray-500">{formatUpdatedAt(row.updatedAt)}</DataTableCell>
+                </DataTableRow>
+              ))
+            ) : (
+              <EmptyTableRow colSpan={7}>ไม่พบเอกสาร</EmptyTableRow>
+            )}
+          </DataTableBody>
+        </DataTable>
       </section>
     </div>
   );
