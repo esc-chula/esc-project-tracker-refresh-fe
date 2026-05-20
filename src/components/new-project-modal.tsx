@@ -191,7 +191,7 @@ export function NewProjectModal({ apiBaseURL, open, onClose }: NewProjectModalPr
           <label className="block space-y-2">
             <span className="text-m font-medium text-black">รหัสโครงการ</span>
             <FormInput
-              readOnly
+              disabled
               value={projectCode}
               placeholder={isPreviewLoading ? "กำลังโหลดรหัสโครงการ..." : "XXXX"}
             />
