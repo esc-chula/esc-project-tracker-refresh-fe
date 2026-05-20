@@ -26,7 +26,7 @@ export function ProjectsPageContent({ projects }: { projects: Project[] }) {
 
       <section>
         <div className="mb-6 flex items-center gap-3 text-xl font-semibold text-black">
-          <FolderOpen className="h-6 w-6 text-carmine" />
+          <FolderOpen className="h-6 w-6 text-black" />
           <span>โครงการทั้งหมด</span>
         </div>
 

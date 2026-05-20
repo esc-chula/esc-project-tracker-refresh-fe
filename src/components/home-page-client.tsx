@@ -71,7 +71,7 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
       <section>
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3 text-xl font-semibold text-black">
-            <FolderOpen className="h-6 w-6 text-carmine" />
+            <FolderOpen className="h-6 w-6 text-black" />
             <span>โครงการล่าสุด</span>
           </div>
           <Link className="flex items-center gap-2 text-lg text-black" href="/projects">
@@ -99,7 +99,7 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
       <section>
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3 text-xl font-semibold text-black">
-            <FileSearch className="h-6 w-6 text-carmine" />
+            <FileSearch className="h-6 w-6 text-black" />
             <span>เอกสารล่าสุด</span>
           </div>
           <div className="flex items-center gap-2 text-lg text-gray-500">

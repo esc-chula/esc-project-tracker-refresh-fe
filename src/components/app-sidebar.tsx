@@ -32,7 +32,7 @@ export function AppSidebar() {
           <div className="mt-3 h-px w-full bg-white/70" />
         </div>
 
-        <nav className="mt-9 space-y-2 xl:mt-11">
+        <nav className="mt-9 flex flex-col gap-2 xl:mt-11">
           {primaryItems.map((item) => {
             const active = item.href !== "#" && (pathname === item.href || pathname.startsWith(`${item.href}/`));
             const content = (
@@ -50,9 +50,11 @@ export function AppSidebar() {
             );
 
             return item.disabled ? (
-              <div key={item.label}>{content}</div>
+              <div className="block" key={item.label}>
+                {content}
+              </div>
             ) : (
-              <Link href={item.href} key={item.label}>
+              <Link className="block" href={item.href} key={item.label}>
                 {content}
               </Link>
             );

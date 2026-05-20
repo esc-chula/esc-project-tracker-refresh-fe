@@ -11,7 +11,7 @@ function getRoleLabel(role: string) {
   }
 
   if (role === "student") {
-    return "ผู้จัดทำโครง";
+    return "ผู้จัดทำโครงการ";
   }
 
   return "ESC";
