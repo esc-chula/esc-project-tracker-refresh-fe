@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { Project } from "@/lib/api";
+import { projectTypeOptions } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -27,6 +28,10 @@ function getAPIErrorMessage(payload: ErrorPayload | null, fallback: string) {
   }
 
   return payload.detail || payload.title || fallback;
+}
+
+function getProjectTypeLabel(type: string) {
+  return projectTypeOptions.find((option) => option.value === type)?.label ?? "เลือกประเภทโครงการ";
 }
 
 export function ProjectDetailContent({
@@ -63,14 +68,12 @@ export function ProjectDetailContent({
         const body =
           mode === "create"
             ? {
-                projectCode: project.projectCode,
                 name: project.name,
                 type: project.type,
                 reserveDate: project.reserveDate || undefined,
                 detail: project.detail
               }
             : {
-                projectCode: project.projectCode,
                 name: project.name,
                 type: project.type,
                 status: project.status,
@@ -89,9 +92,7 @@ export function ProjectDetailContent({
 
         if (!response.ok) {
           const payload = (await response.json().catch(() => null)) as ErrorPayload | null;
-          setErrorMessage(
-            getAPIErrorMessage(payload, mode === "create" ? "ไม่สามารถเปิดโครงการใหม่ได้" : "ไม่สามารถบันทึกข้อมูลโครงการได้")
-          );
+          setErrorMessage(getAPIErrorMessage(payload, mode === "create" ? "ไม่สามารถเปิดโครงการใหม่ได้" : "ไม่สามารถบันทึกข้อมูลโครงการได้"));
           return;
         }
 
@@ -109,21 +110,18 @@ export function ProjectDetailContent({
       <section className="rounded-3xl bg-gray-50 p-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <div className="text-3xl font-bold text-black">
-              {project.name || (mode === "create" ? "เปิดโครงการใหม่" : "โครงการ")}
+            <div className="text-3xl font-bold text-black">{project.name || (mode === "create" ? "เปิดโครงการใหม่" : "โครงการ")}</div>
+            <div className="mt-2 text-sm text-gray-500">
+              {project.projectCode || (mode === "create" ? "รหัสโครงการจะถูกสร้างอัตโนมัติตามประเภทโครงการ" : "ไม่มีรหัสโครงการ")}
             </div>
-            <div className="mt-2 text-sm text-gray-500">{project.projectCode || "ไม่มีรหัสโครงการ"}</div>
           </div>
-          <div className="rounded-full bg-gray-100 px-4 py-2 text-sm text-carmine">{project.status || "draft"}</div>
+          <div className="rounded-full bg-gray-50 px-4 py-2 text-sm text-carmine">{project.status || "draft"}</div>
         </div>
 
         <form className="grid grid-cols-1 gap-4 xl:grid-cols-2" onSubmit={handleSubmit}>
-          <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
-            value={project.projectCode}
-            onChange={(event) => updateField("projectCode", event.target.value)}
-            placeholder="รหัสโครงการ"
-          />
+          <div className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-500">
+            {mode === "create" ? "ระบบจะสร้างรหัสโครงการอัตโนมัติหลังเลือกประเภทโครงการและบันทึกข้อมูล" : project.projectCode || "ไม่มีรหัสโครงการ"}
+          </div>
           <Input
             className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
             value={project.status}
@@ -137,12 +135,21 @@ export function ProjectDetailContent({
             onChange={(event) => updateField("name", event.target.value)}
             placeholder="ชื่อโครงการ"
           />
-          <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
-            value={project.type}
-            onChange={(event) => updateField("type", event.target.value)}
-            placeholder="ประเภทโครงการ"
-          />
+          <label className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-black">ประเภทโครงการ</span>
+            <select
+              className="h-12 rounded-xl border border-gray-300 bg-white px-4 text-sm text-black outline-none"
+              value={project.type}
+              onChange={(event) => updateField("type", event.target.value)}
+            >
+              <option value="">{getProjectTypeLabel("")}</option>
+              {projectTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <Input
             className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
             type="date"

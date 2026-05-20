@@ -25,6 +25,22 @@ export type Project = {
   updatedAt: string;
 };
 
+export const projectTypeOptions = [
+  { value: "10", label: "10xx - โครงการฝ่ายกิจการภายใน" },
+  { value: "11", label: "11xx - โครงการฝ่ายศิลปะและวัฒนธรรม" },
+  { value: "12", label: "12xx - โครงการฝ่ายกีฬา" },
+  { value: "13", label: "13xx - โครงการฝ่ายพัฒนาสังคมและบำเพ็ญประโยชน์" },
+  { value: "14", label: "14xx - โครงการสวัสดิการนิสิตและสิ่งแวดล้อม" },
+  { value: "20", label: "20xx - โครงการฝ่ายกิจการภายนอก" },
+  { value: "30", label: "30xx - โครงการฝ่ายนิสิตสัมพันธ์" },
+  { value: "40", label: "40xx - โครงการฝ่ายเทคโนโลยี" },
+  { value: "50", label: "50xx - โครงการฝ่ายพัฒนาองค์กร" },
+  { value: "60", label: "60xx - โครงการฝ่ายประชาสัมพันธ์และการตลาด" },
+  { value: "70", label: "70xx - โครงการฝ่ายวิชาการ" },
+  { value: "80", label: "80xx - โครงการอื่นๆ ของ กวศ." },
+  { value: "90", label: "90xx - โครงการฝ่ายสำนักงานและพัสดุ" }
+] as const;
+
 const apiBaseURL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
