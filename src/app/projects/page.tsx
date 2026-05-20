@@ -1,6 +1,6 @@
+import { FolderOpen } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { FolderOpen } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ProjectsPageContent } from "@/components/projects-page-content";
 import { getCurrentUser, getProjects } from "@/lib/api";
@@ -15,10 +15,11 @@ export default async function ProjectsPage() {
   }
 
   const projects = await getProjects(cookieHeader);
+  const apiBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
   return (
     <AppShell currentUser={currentUser} title="โครงการ" titleIcon={<FolderOpen size={40} strokeWidth={2.2} />}>
-      <ProjectsPageContent projects={projects} />
+      <ProjectsPageContent apiBaseURL={apiBaseURL} projects={projects} />
     </AppShell>
   );
 }

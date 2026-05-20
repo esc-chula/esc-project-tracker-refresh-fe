@@ -41,8 +41,7 @@ export const projectTypeOptions = [
   { value: "90", label: "90xx - โครงการฝ่ายสำนักงานและพัสดุ" }
 ] as const;
 
-const apiBaseURL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+const apiBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 export function getGoogleLoginURL(): string {
   return `${apiBaseURL}/api/v1/auth/google/login`;
@@ -68,7 +67,7 @@ export async function getHealth(): Promise<HealthResult> {
   } catch {
     return {
       ok: false,
-      message: "Start the API with `go run ./cmd/api`"
+      message: "Start the API with `go run ./cmd`"
     };
   }
 }
@@ -143,4 +142,25 @@ export async function getProjectById(cookieHeader: string, projectId: string): P
   } catch {
     return null;
   }
+}
+
+export async function previewNextProjectCode(projectType: string): Promise<string> {
+  if (!projectType) {
+    return "";
+  }
+
+  const response = await fetch(
+    `${apiBaseURL}/api/v1/projects/next-code?type=${encodeURIComponent(projectType)}`,
+    {
+      cache: "no-store",
+      credentials: "include"
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("ไม่สามารถพรีวิวรหัสโครงการได้");
+  }
+
+  const payload = (await response.json()) as { projectCode?: string };
+  return payload.projectCode ?? "";
 }
