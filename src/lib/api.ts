@@ -1,3 +1,5 @@
+import { documentTypeOptions, projectTypeOptions } from "@/lib/catalog";
+
 type HealthResult = {
   ok: boolean;
   message: string;
@@ -25,21 +27,22 @@ export type Project = {
   updatedAt: string;
 };
 
-export const projectTypeOptions = [
-  { value: "10", label: "10xx - โครงการฝ่ายกิจการภายใน" },
-  { value: "11", label: "11xx - โครงการฝ่ายศิลปะและวัฒนธรรม" },
-  { value: "12", label: "12xx - โครงการฝ่ายกีฬา" },
-  { value: "13", label: "13xx - โครงการฝ่ายพัฒนาสังคมและบำเพ็ญประโยชน์" },
-  { value: "14", label: "14xx - โครงการสวัสดิการนิสิตและสิ่งแวดล้อม" },
-  { value: "20", label: "20xx - โครงการฝ่ายกิจการภายนอก" },
-  { value: "30", label: "30xx - โครงการฝ่ายนิสิตสัมพันธ์" },
-  { value: "40", label: "40xx - โครงการฝ่ายเทคโนโลยี" },
-  { value: "50", label: "50xx - โครงการฝ่ายพัฒนาองค์กร" },
-  { value: "60", label: "60xx - โครงการฝ่ายประชาสัมพันธ์และการตลาด" },
-  { value: "70", label: "70xx - โครงการฝ่ายวิชาการ" },
-  { value: "80", label: "80xx - โครงการอื่นๆ ของ กวศ." },
-  { value: "90", label: "90xx - โครงการฝ่ายสำนักงานและพัสดุ" }
-] as const;
+export type Document = {
+  id: string;
+  projectId: string;
+  ownerUserId: string;
+  projectCode: string;
+  documentCode: string;
+  name: string;
+  type: string;
+  subType?: string;
+  status: string;
+  detail: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export { documentTypeOptions, projectTypeOptions };
 
 const apiBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
@@ -144,6 +147,30 @@ export async function getProjectById(cookieHeader: string, projectId: string): P
   }
 }
 
+export async function getDocumentsByProject(cookieHeader: string, projectId: string): Promise<Document[]> {
+  if (!cookieHeader || !projectId) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(`${apiBaseURL}/api/v1/projects/${projectId}/documents`, {
+      cache: "no-store",
+      headers: {
+        Cookie: cookieHeader
+      }
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as { documents?: Document[] };
+    return payload.documents ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function previewNextProjectCode(projectType: string): Promise<string> {
   if (!projectType) {
     return "";
@@ -165,7 +192,36 @@ export async function previewNextProjectCode(projectType: string): Promise<strin
   return payload.projectCode ?? "";
 }
 
+export async function previewNextDocumentCode(documentType: string): Promise<string> {
+  if (!documentType) {
+    return "";
+  }
+
+  const response = await fetch(
+    `${apiBaseURL}/api/v1/documents/next-code?type=${encodeURIComponent(documentType)}`,
+    {
+      cache: "no-store",
+      credentials: "include"
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("ไม่สามารถพรีวิวรหัสเอกสารได้");
+  }
+
+  const payload = (await response.json()) as { documentCode?: string };
+  return payload.documentCode ?? "";
+}
+
 export function getProjectRoute(project: Pick<Project, "id" | "projectCode">): string {
   const publicIdentifier = project.projectCode || project.id;
   return `/project/${encodeURIComponent(publicIdentifier)}`;
+}
+
+export function splitDocumentTypeOption(value: string): { type: string; subType: string } {
+  const [type, ...rest] = value.split("-");
+  return {
+    type,
+    subType: rest.join("-")
+  };
 }
