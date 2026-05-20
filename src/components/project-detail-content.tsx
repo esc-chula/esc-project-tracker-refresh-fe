@@ -1,195 +1,81 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import type { Project } from "@/lib/api";
-import { projectTypeOptions } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { FormInput, FormSelect, FormTextarea } from "@/components/ui/form-fields";
-
-type ErrorPayload = {
-  detail?: string;
-  title?: string;
-  errors?: Array<{
-    message?: string;
-    error?: string;
-    location?: string;
-    value?: unknown;
-  }>;
-};
-
-function getAPIErrorMessage(payload: ErrorPayload | null, fallback: string) {
-  if (!payload) {
-    return fallback;
-  }
-
-  if (payload.errors && payload.errors.length > 0) {
-    const firstError = payload.errors[0];
-    return firstError.message || firstError.error || payload.detail || payload.title || fallback;
-  }
-
-  return payload.detail || payload.title || fallback;
-}
-
-function getProjectTypeLabel(type: string) {
-  return projectTypeOptions.find((option) => option.value === type)?.label ?? "เลือกประเภทโครงการ";
-}
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import type { CurrentUser, Document, Project } from "@/lib/api";
+import { DocumentsExplorer } from "@/components/documents-explorer";
+import { NewDocumentModal } from "@/components/new-document-modal";
+import type { DocumentExplorerRow } from "@/lib/document-view";
+import { getRecentItems, saveRecentItem, type RecentItem } from "@/lib/recent-items";
 
 export function ProjectDetailContent({
   apiBaseURL,
-  initialProject,
-  mode = "edit"
+  currentUser,
+  initialDocuments,
+  initialProject
 }: {
   apiBaseURL: string;
+  currentUser: CurrentUser;
+  initialDocuments: Document[];
   initialProject: Project;
-  mode?: "create" | "edit";
 }) {
-  const [project, setProject] = useState(initialProject);
-  const [isPending, startTransition] = useTransition();
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [documents, setDocuments] = useState(initialDocuments);
+  const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
+  const [recentItems] = useState<RecentItem[]>(() => getRecentItems());
 
-  function updateField(key: keyof Project, value: string) {
-    setProject((currentProject) => ({
-      ...currentProject,
-      [key]: value
-    }));
-  }
-
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    startTransition(async () => {
-      try {
-        const endpoint =
-          mode === "create" ? `${apiBaseURL}/api/v1/projects` : `${apiBaseURL}/api/v1/projects/${project.id}`;
-
-        const body =
-          mode === "create"
-            ? {
-                name: project.name,
-                type: project.type,
-                reserveDate: project.reserveDate || undefined,
-                detail: project.detail
-              }
-            : {
-                name: project.name,
-                type: project.type,
-                status: project.status,
-                reserveDate: project.reserveDate || undefined,
-                detail: project.detail
-              };
-
-        const response = await fetch(endpoint, {
-          method: mode === "create" ? "POST" : "PATCH",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(body)
-        });
-
-        if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as ErrorPayload | null;
-          setErrorMessage(
-            getAPIErrorMessage(
-              payload,
-              mode === "create" ? "ไม่สามารถเปิดโครงการใหม่ได้" : "ไม่สามารถบันทึกข้อมูลโครงการได้"
-            )
-          );
-          return;
-        }
-
-        const payload = (await response.json()) as { project: Project };
-        setProject(payload.project);
-        setSuccessMessage(mode === "create" ? "เปิดโครงการใหม่สำเร็จ" : "บันทึกข้อมูลโครงการสำเร็จ");
-      } catch {
-        setErrorMessage("ไม่สามารถเชื่อมต่อกับ API ได้");
-      }
+  useEffect(() => {
+    saveRecentItem({
+      kind: "project",
+      id: initialProject.id,
+      title: `${initialProject.projectCode} ${initialProject.name}`,
+      subtitle: "โครงการ",
+      href: `/project/${encodeURIComponent(initialProject.projectCode || initialProject.id)}`
     });
-  }
+  }, [initialProject.id, initialProject.name, initialProject.projectCode]);
+
+  const documentRows = useMemo<DocumentExplorerRow[]>(
+    () =>
+      documents.map((document) => ({
+        ...document,
+        projectName: initialProject.name,
+        projectType: initialProject.type
+      })),
+    [documents, initialProject.name, initialProject.type]
+  );
+
+  const navigation = (
+    <div className="text-base font-normal text-gray-500">
+      <Link className="hover:underline" href="/projects">
+        โครงการ
+      </Link>
+      <span> / {initialProject.projectCode} {initialProject.name}</span>
+    </div>
+  );
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-3xl bg-gray-100 p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <div className="text-3xl font-bold text-black">
-              {project.name || (mode === "create" ? "เปิดโครงการใหม่" : "โครงการ")}
-            </div>
-            <div className="mt-2 text-sm text-gray-500">
-              {project.projectCode ||
-                (mode === "create"
-                  ? "รหัสโครงการจะถูกสร้างอัตโนมัติตามประเภทโครงการ"
-                  : "ไม่มีรหัสโครงการ")}
-            </div>
-          </div>
-          <div className="rounded-full bg-gray-100 px-4 py-2 text-sm text-carmine">{project.status || "draft"}</div>
-        </div>
+    <>
+      <DocumentsExplorer
+        afterFiltersContent={navigation}
+        createButtonLabel="สร้างเอกสารใหม่"
+        documents={documentRows}
+        emptyText="ไม่พบเอกสาร"
+        onCreateClick={() => setIsDocumentModalOpen(true)}
+        ownerDisplayName={currentUser.displayName}
+        recentItems={recentItems}
+        searchPlaceholder="ค้นหาเอกสารของฉัน"
+        searchScope="project-documents"
+      />
 
-        <form className="grid grid-cols-1 gap-4 xl:grid-cols-2" onSubmit={handleSubmit}>
-          <div className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-500">
-            {mode === "create"
-              ? "ระบบจะสร้างรหัสโครงการอัตโนมัติหลังเลือกประเภทโครงการและบันทึกข้อมูล"
-              : project.projectCode || "ไม่มีรหัสโครงการ"}
-          </div>
-          <FormInput
-            value={project.status}
-            onChange={(event) => updateField("status", event.target.value)}
-            placeholder="สถานะ"
-            readOnly={mode === "create"}
-          />
-          <div className="xl:col-span-2">
-            <FormInput
-              value={project.name}
-              onChange={(event) => updateField("name", event.target.value)}
-              placeholder="ชื่อโครงการ"
-            />
-          </div>
-          <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-black">ประเภทโครงการ</span>
-            <FormSelect value={project.type} onChange={(event) => updateField("type", event.target.value)}>
-              <option value="">{getProjectTypeLabel("")}</option>
-              {projectTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </FormSelect>
-          </label>
-          <FormInput
-            type="date"
-            value={project.reserveDate || ""}
-            onChange={(event) => updateField("reserveDate", event.target.value)}
-          />
-          <div className="xl:col-span-2">
-            <FormTextarea
-              className="min-h-[140px]"
-              value={project.detail}
-              onChange={(event) => updateField("detail", event.target.value)}
-              placeholder="รายละเอียดโครงการ"
-            />
-          </div>
-          <div className="flex items-center gap-4 xl:col-span-2">
-            <Button
-              className="h-12 rounded-xl bg-carmine px-8 text-sm text-white hover:bg-carmine/90"
-              disabled={isPending}
-              type="submit"
-            >
-              {isPending
-                ? mode === "create"
-                  ? "กำลังเปิดโครงการ..."
-                  : "กำลังบันทึก..."
-                : mode === "create"
-                  ? "เปิดโครงการใหม่"
-                  : "บันทึกข้อมูล"}
-            </Button>
-            {successMessage ? <div className="text-sm font-medium text-green-700">{successMessage}</div> : null}
-            {errorMessage ? <div className="text-sm font-medium text-red-700">{errorMessage}</div> : null}
-          </div>
-        </form>
-      </section>
-    </div>
+      <NewDocumentModal
+        apiBaseURL={apiBaseURL}
+        onClose={() => setIsDocumentModalOpen(false)}
+        onCreated={(document) => {
+          setDocuments((currentDocuments) => [document, ...currentDocuments]);
+        }}
+        open={isDocumentModalOpen}
+        projectCode={initialProject.projectCode}
+        projectId={initialProject.id}
+      />
+    </>
   );
 }
