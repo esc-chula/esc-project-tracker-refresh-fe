@@ -61,7 +61,7 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
       <div className="relative">
         <SearchIcon className="absolute left-5 top-1/2 h-6 w-6 -translate-y-1/2 text-black" />
         <Input
-          className="h-[60px] rounded-full border-0 bg-gray-100 pl-16 text-base text-black shadow-none placeholder:text-gray-500 focus-visible:ring-0"
+          className="h-[60px] rounded-full border-0 bg-gray-50 pl-16 text-base text-black shadow-none placeholder:text-gray-500 focus-visible:ring-0"
           placeholder="ค้นหาโครงการหรือเอกสาร"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -84,7 +84,7 @@ export function HomePageClient({ currentUser, initialProjects, googleLoginURL }:
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
             {latestProjects.map((project) => (
               <Link href={`/project/${project.id}`} key={project.id}>
-                <div className="rounded-2xl bg-gray-100 px-5 py-4 transition hover:bg-gray-200">
+                <div className="rounded-2xl bg-gray-50 px-5 py-4 transition hover:bg-gray-200">
                   <div className="text-2xl font-bold leading-none text-black">{project.projectCode || "NEW"}</div>
                   <div className="mt-3 line-clamp-2 text-sm text-gray-700">{project.name}</div>
                 </div>

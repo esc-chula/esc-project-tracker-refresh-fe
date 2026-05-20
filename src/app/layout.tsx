@@ -11,7 +11,7 @@ const ibmPlexSansThai = IBM_Plex_Sans_Thai({
 
 export const metadata: Metadata = {
   title: "ESC Project Tracker",
-  description: "Revamped ESC Project Tracker"
+  description: "ESC Project Tracker"
 };
 
 export default function RootLayout({
