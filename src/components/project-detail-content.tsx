@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import type { Project } from "@/lib/api";
 import { projectTypeOptions } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { FormInput, FormSelect, FormTextarea } from "@/components/ui/form-fields";
 
 type ErrorPayload = {
   detail?: string;
@@ -92,7 +92,12 @@ export function ProjectDetailContent({
 
         if (!response.ok) {
           const payload = (await response.json().catch(() => null)) as ErrorPayload | null;
-          setErrorMessage(getAPIErrorMessage(payload, mode === "create" ? "ไม่สามารถเปิดโครงการใหม่ได้" : "ไม่สามารถบันทึกข้อมูลโครงการได้"));
+          setErrorMessage(
+            getAPIErrorMessage(
+              payload,
+              mode === "create" ? "ไม่สามารถเปิดโครงการใหม่ได้" : "ไม่สามารถบันทึกข้อมูลโครงการได้"
+            )
+          );
           return;
         }
 
@@ -110,9 +115,14 @@ export function ProjectDetailContent({
       <section className="rounded-3xl bg-gray-50 p-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <div className="text-3xl font-bold text-black">{project.name || (mode === "create" ? "เปิดโครงการใหม่" : "โครงการ")}</div>
+            <div className="text-3xl font-bold text-black">
+              {project.name || (mode === "create" ? "เปิดโครงการใหม่" : "โครงการ")}
+            </div>
             <div className="mt-2 text-sm text-gray-500">
-              {project.projectCode || (mode === "create" ? "รหัสโครงการจะถูกสร้างอัตโนมัติตามประเภทโครงการ" : "ไม่มีรหัสโครงการ")}
+              {project.projectCode ||
+                (mode === "create"
+                  ? "รหัสโครงการจะถูกสร้างอัตโนมัติตามประเภทโครงการ"
+                  : "ไม่มีรหัสโครงการ")}
             </div>
           </div>
           <div className="rounded-full bg-gray-50 px-4 py-2 text-sm text-carmine">{project.status || "draft"}</div>
@@ -120,51 +130,60 @@ export function ProjectDetailContent({
 
         <form className="grid grid-cols-1 gap-4 xl:grid-cols-2" onSubmit={handleSubmit}>
           <div className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-500">
-            {mode === "create" ? "ระบบจะสร้างรหัสโครงการอัตโนมัติหลังเลือกประเภทโครงการและบันทึกข้อมูล" : project.projectCode || "ไม่มีรหัสโครงการ"}
+            {mode === "create"
+              ? "ระบบจะสร้างรหัสโครงการอัตโนมัติหลังเลือกประเภทโครงการและบันทึกข้อมูล"
+              : project.projectCode || "ไม่มีรหัสโครงการ"}
           </div>
-          <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
+          <FormInput
             value={project.status}
             onChange={(event) => updateField("status", event.target.value)}
             placeholder="สถานะ"
             readOnly={mode === "create"}
           />
-          <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black xl:col-span-2"
-            value={project.name}
-            onChange={(event) => updateField("name", event.target.value)}
-            placeholder="ชื่อโครงการ"
-          />
+          <div className="xl:col-span-2">
+            <FormInput
+              value={project.name}
+              onChange={(event) => updateField("name", event.target.value)}
+              placeholder="ชื่อโครงการ"
+            />
+          </div>
           <label className="flex flex-col gap-2">
             <span className="text-sm font-medium text-black">ประเภทโครงการ</span>
-            <select
-              className="h-12 rounded-xl border border-gray-300 bg-white px-4 text-sm text-black outline-none"
-              value={project.type}
-              onChange={(event) => updateField("type", event.target.value)}
-            >
+            <FormSelect value={project.type} onChange={(event) => updateField("type", event.target.value)}>
               <option value="">{getProjectTypeLabel("")}</option>
               {projectTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </label>
-          <Input
-            className="h-12 rounded-xl border-gray-300 bg-white text-sm text-black"
+          <FormInput
             type="date"
             value={project.reserveDate || ""}
             onChange={(event) => updateField("reserveDate", event.target.value)}
           />
-          <textarea
-            className="min-h-[140px] rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-black outline-none xl:col-span-2"
-            value={project.detail}
-            onChange={(event) => updateField("detail", event.target.value)}
-            placeholder="รายละเอียดโครงการ"
-          />
+          <div className="xl:col-span-2">
+            <FormTextarea
+              className="min-h-[140px]"
+              value={project.detail}
+              onChange={(event) => updateField("detail", event.target.value)}
+              placeholder="รายละเอียดโครงการ"
+            />
+          </div>
           <div className="flex items-center gap-4 xl:col-span-2">
-            <Button className="h-12 rounded-xl bg-carmine px-8 text-sm text-white hover:bg-carmine/90" disabled={isPending} type="submit">
-              {isPending ? (mode === "create" ? "กำลังเปิดโครงการ..." : "กำลังบันทึก...") : mode === "create" ? "เปิดโครงการใหม่" : "บันทึกข้อมูล"}
+            <Button
+              className="h-12 rounded-xl bg-carmine px-8 text-sm text-white hover:bg-carmine/90"
+              disabled={isPending}
+              type="submit"
+            >
+              {isPending
+                ? mode === "create"
+                  ? "กำลังเปิดโครงการ..."
+                  : "กำลังบันทึก..."
+                : mode === "create"
+                  ? "เปิดโครงการใหม่"
+                  : "บันทึกข้อมูล"}
             </Button>
             {successMessage ? <div className="text-sm font-medium text-green-700">{successMessage}</div> : null}
             {errorMessage ? <div className="text-sm font-medium text-red-700">{errorMessage}</div> : null}
