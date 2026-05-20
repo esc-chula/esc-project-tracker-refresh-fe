@@ -2,11 +2,11 @@
 
 import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X } from "lucide-react";
 import { getProjectRoute, previewNextProjectCode, projectTypeOptions } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { CancelButton } from "@/components/ui/cancel-button";
 import { FormInput, FormSelect, FormTextarea } from "@/components/ui/form-fields";
+import { FormModalShell } from "@/components/ui/form-modal-shell";
 
 type ErrorPayload = {
   detail?: string;
@@ -165,95 +165,68 @@ export function NewProjectModal({ apiBaseURL, open, onClose }: NewProjectModalPr
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4 py-8"
-      onClick={handleClose}
-      role="presentation"
-    >
-      <div
-        className="w-full max-w-[640px] rounded-[28px] bg-white p-8 shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="new-project-modal-title"
-      >
-        <div className="mb-8 flex items-start justify-between gap-4">
-          <h2 className="text-3xl font-medium text-black" id="new-project-modal-title">
-            เปิดโครงการใหม่
-          </h2>
-          <button
-            type="button"
-            aria-label="ปิด"
-            className="rounded-full p-1 text-black transition hover:bg-gray-100"
-            onClick={handleClose}
+    <FormModalShell onClose={handleClose} title="เปิดโครงการใหม่">
+      <form className="space-y-5" onSubmit={handleSubmit}>
+        <label className="block space-y-2">
+          <span className="text-m font-medium text-black">รหัสโครงการ</span>
+          <FormInput
+            disabled
+            placeholder={isPreviewLoading ? "กำลังโหลดรหัสโครงการ..." : "XXXX"}
+            value={projectCode}
+          />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-m font-medium text-black">
+            ชื่อโครงการ (TH) <span className="text-carmine">*</span>
+          </span>
+          <FormInput
+            onChange={(event) => setName(event.target.value)}
+            placeholder="กรอกชื่อโครงการ"
+            value={name}
+          />
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-m font-medium text-black">
+            ประเภทโครงการ <span className="text-carmine">*</span>
+          </span>
+          <FormSelect
+            onChange={(event) => {
+              void handleTypeChange(event.target.value);
+            }}
+            value={type}
           >
-            <X className="h-8 w-8" strokeWidth={2.2} />
-          </button>
+            <option value="">เลือกประเภทโครงการ</option>
+            {projectTypeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </FormSelect>
+        </label>
+
+        <label className="block space-y-2">
+          <span className="text-m font-medium text-black">รายละเอียด (optional)</span>
+          <FormTextarea
+            onChange={(event) => setDetail(event.target.value)}
+            placeholder="รายละเอียดเพิ่มเติม"
+            value={detail}
+          />
+        </label>
+
+        <div className="flex items-center justify-end gap-3 pt-2">
+          {errorMessage ? <div className="mr-auto text-base font-medium text-carmine">{errorMessage}</div> : null}
+          <CancelButton onClick={handleClose} />
+          <Button
+            className="h-12 rounded-2xl bg-carmine px-6 text-base font-semibold text-white hover:bg-red-800"
+            disabled={isPending}
+            type="submit"
+          >
+            {isPending ? "กำลังเปิดโครงการ..." : "+ เปิดโครงการ"}
+          </Button>
         </div>
-
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <label className="block space-y-2">
-            <span className="text-m font-medium text-black">รหัสโครงการ</span>
-            <FormInput
-              disabled
-              value={projectCode}
-              placeholder={isPreviewLoading ? "กำลังโหลดรหัสโครงการ..." : "XXXX"}
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-m font-medium text-black">
-              ชื่อโครงการ (TH) <span className="text-red-700">*</span>
-            </span>
-            <FormInput
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="กรอกชื่อโครงการ"
-            />
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-m font-medium text-black">
-              ประเภทโครงการ <span className="text-red-700">*</span>
-            </span>
-            <FormSelect
-              value={type}
-              onChange={(event) => {
-                void handleTypeChange(event.target.value);
-              }}
-            >
-              <option value="">เลือกประเภทโครงการ</option>
-              {projectTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </FormSelect>
-          </label>
-
-          <label className="block space-y-2">
-            <span className="text-m font-medium text-black">รายละเอียด (optional)</span>
-            <FormTextarea
-              value={detail}
-              onChange={(event) => setDetail(event.target.value)}
-              placeholder="รายละเอียดเพิ่มเติม"
-            />
-          </label>
-
-          <div className="flex items-center justify-end gap-3 pt-2">
-            {errorMessage ? <div className="mr-auto text-base font-medium text-red-700">{errorMessage}</div> : null}
-            <CancelButton onClick={handleClose} />
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="h-12 rounded-2xl bg-red-700 px-6 text-base font-semibold text-white hover:bg-red-800"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {isPending ? "กำลังเปิดโครงการ..." : "เปิดโครงการ"}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </FormModalShell>
   );
 }

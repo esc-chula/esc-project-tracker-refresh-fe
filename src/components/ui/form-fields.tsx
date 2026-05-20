@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 const frameClassName =
-  "rounded-[20px] border border-transparent p-[2px] transition-colors duration-150 focus-within:border-red-700";
+  "rounded-[20px] border border-transparent p-[2px] transition-colors duration-150 focus-within:border-carmine";
 const inputClassName =
   "h-[52px] rounded-[18px] border border-gray-300 px-5 text-base text-black placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0";
 const textareaClassName =
