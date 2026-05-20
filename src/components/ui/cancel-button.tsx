@@ -14,7 +14,7 @@ const CancelButton = React.forwardRef<HTMLButtonElement, CancelButtonProps>(
         type={type}
         variant="outline"
         className={cn(
-          "h-12 rounded-2xl border-gray-400 px-6 text-base font-medium text-gray-600 hover:bg-gray-50",
+          "h-12 rounded-2xl border-gray-400 px-6 text-base font-medium text-gray-600 hover:bg-gray-100",
           className
         )}
         {...props}

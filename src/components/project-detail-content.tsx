@@ -112,7 +112,7 @@ export function ProjectDetailContent({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-3xl bg-gray-50 p-6">
+      <section className="rounded-3xl bg-gray-100 p-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <div className="text-3xl font-bold text-black">
@@ -125,7 +125,7 @@ export function ProjectDetailContent({
                   : "ไม่มีรหัสโครงการ")}
             </div>
           </div>
-          <div className="rounded-full bg-gray-50 px-4 py-2 text-sm text-carmine">{project.status || "draft"}</div>
+          <div className="rounded-full bg-gray-100 px-4 py-2 text-sm text-carmine">{project.status || "draft"}</div>
         </div>
 
         <form className="grid grid-cols-1 gap-4 xl:grid-cols-2" onSubmit={handleSubmit}>

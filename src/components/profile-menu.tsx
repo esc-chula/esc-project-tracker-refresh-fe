@@ -38,7 +38,7 @@ export function ProfileMenu({ currentUser }: { currentUser: CurrentUser }) {
       {open ? (
         <div className="absolute right-0 top-[calc(100%+12px)] z-20 min-w-[180px] rounded-2xl border border-gray-200 bg-white p-2 shadow-lg">
           <Link
-            className="block rounded-xl px-4 py-3 text-sm font-medium text-black transition hover:bg-gray-50"
+            className="block rounded-xl px-4 py-3 text-sm font-medium text-black transition hover:bg-gray-100"
             href={logoutURL}
             onClick={() => setOpen(false)}
           >
