@@ -54,8 +54,6 @@ export function DocumentsPageContent({
         documents={documentRows}
         emptyText="ไม่พบเอกสาร"
         onCreateClick={() => setIsDocumentModalOpen(true)}
-        ownerDisplayName={currentUser.displayName}
-        ownerPhone={currentUser.phone}
         recentItems={recentItems}
         searchItems={searchItems}
         searchPlaceholder="ค้นหาโครงการหรือเอกสาร"

@@ -33,8 +33,6 @@ function getDocumentSortValue(document: DocumentExplorerRow, sortBy: DocumentSor
 
 export function DocumentsExplorer({
   documents,
-  ownerDisplayName,
-  ownerPhone,
   searchScope,
   searchPlaceholder,
   searchItems = [],
@@ -46,8 +44,6 @@ export function DocumentsExplorer({
   recentItems = []
 }: {
   documents: DocumentExplorerRow[];
-  ownerDisplayName: string;
-  ownerPhone?: string;
   searchScope: SearchScope;
   searchPlaceholder: string;
   searchItems?: RecentItem[];
@@ -186,8 +182,6 @@ export function DocumentsExplorer({
       <DocumentTable
         documents={filteredDocuments}
         emptyText={emptyText}
-        ownerDisplayName={ownerDisplayName}
-        ownerPhone={ownerPhone}
       />
     </div>
   );

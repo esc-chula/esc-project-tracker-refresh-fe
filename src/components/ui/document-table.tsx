@@ -25,8 +25,6 @@ import {
 type DocumentTableProps = {
   documents: DocumentExplorerRow[];
   emptyText: string;
-  ownerDisplayName: string;
-  ownerPhone?: string;
 };
 
 const documentColumnWidths = ["10%", "17.5%", "17.5%", "15%", "15%", "7.5%", "12.5%"] as const;
@@ -44,9 +42,7 @@ function maskPhone(phone?: string) {
 
 export function DocumentTable({
   documents,
-  emptyText,
-  ownerDisplayName,
-  ownerPhone
+  emptyText
 }: DocumentTableProps) {
   const router = useRouter();
   const [visiblePhoneRows, setVisiblePhoneRows] = useState<Record<string, boolean>>({});
@@ -85,12 +81,14 @@ export function DocumentTable({
                 <TruncatedText>{document.name || getDocumentTypeLabel(document.type, document.subType)}</TruncatedText>
               </DataTableCell>
               <DataTableCell>
-                <TruncatedText>{ownerDisplayName}</TruncatedText>
+                <TruncatedText>{document.owner?.displayName || "-"}</TruncatedText>
               </DataTableCell>
               <DataTableCell>
                 <div className="inline-flex max-w-full min-w-0 items-center gap-1">
-                  <span className="min-w-0 truncate text-xs md:text-sm">{visiblePhoneRows[document.id] ? ownerPhone || "-" : maskPhone(ownerPhone)}</span>
-                  {ownerPhone ? (
+                  <span className="min-w-0 truncate text-xs md:text-sm">
+                    {visiblePhoneRows[document.id] ? document.owner?.phone || "-" : maskPhone(document.owner?.phone)}
+                  </span>
+                  {document.owner?.phone ? (
                     <button
                       aria-label={visiblePhoneRows[document.id] ? "ซ่อนเบอร์โทรศัพท์" : "แสดงเบอร์โทรศัพท์"}
                       className="shrink-0 rounded-full text-gray-500 transition hover:text-black"

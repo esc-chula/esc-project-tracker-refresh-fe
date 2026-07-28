@@ -25,6 +25,11 @@ export type Document = {
   id: string;
   projectId: string;
   ownerUserId: string;
+  owner?: {
+    id: string;
+    displayName: string;
+    phone?: string;
+  };
   projectCode: string;
   documentCode: string;
   name: string;
@@ -54,6 +59,7 @@ export type DocumentDetail = Document & {
   owner: {
     id: string;
     displayName: string;
+    phone?: string;
   };
   filingCount: number;
   latestFiling?: LatestFilingSummary;

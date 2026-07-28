@@ -14,6 +14,12 @@ export type DocumentExplorerRow = {
   projectCode: string;
   projectName: string;
   projectType: string;
+  ownerUserId: string;
+  owner?: {
+    id: string;
+    displayName: string;
+    phone?: string;
+  };
   documentCode: string;
   name: string;
   type: string;

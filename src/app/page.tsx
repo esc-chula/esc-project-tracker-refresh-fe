@@ -36,7 +36,6 @@ export default async function HomePage() {
   return (
     <AppShell currentUser={currentUser} navItems={[{ label: "หน้าหลัก" }]}>
       <HomePageClient
-        currentUser={currentUser}
         initialDocuments={latestDocuments}
         initialProjects={projects}
       />

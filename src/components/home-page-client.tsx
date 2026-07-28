@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { FileSearch, FolderOpen } from "lucide-react";
-import { getProjectRoute, type CurrentUser, type Project } from "@/lib/api";
+import { getProjectRoute, type Project } from "@/lib/api";
 import { ProjectCard } from "@/components/project-card";
 import { DocumentTable } from "@/components/ui/document-table";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -13,12 +13,11 @@ import { getRecentItems, type RecentItem } from "@/lib/recent-items";
 import { buildGlobalSearchItems } from "@/lib/search-items";
 
 type HomePageClientProps = {
-  currentUser: CurrentUser | null;
   initialProjects: Project[];
   initialDocuments: DocumentExplorerRow[];
 };
 
-export function HomePageClient({ currentUser, initialProjects, initialDocuments }: HomePageClientProps) {
+export function HomePageClient({ initialProjects, initialDocuments }: HomePageClientProps) {
   const [query, setQuery] = useState("");
   const [recentItems] = useState<RecentItem[]>(() => getRecentItems());
 
@@ -76,8 +75,6 @@ export function HomePageClient({ currentUser, initialProjects, initialDocuments 
         <DocumentTable
           documents={initialDocuments}
           emptyText="ไม่พบเอกสาร"
-          ownerDisplayName={currentUser?.displayName || "-"}
-          ownerPhone={currentUser?.phone}
         />
       </section>
     </div>

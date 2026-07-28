@@ -80,8 +80,6 @@ export function ProjectDetailContent({
         emptyText="ไม่พบเอกสาร"
         hideProjectTypeFilter
         onCreateClick={() => setIsDocumentModalOpen(true)}
-        ownerDisplayName={currentUser.displayName}
-        ownerPhone={currentUser.phone}
         recentItems={recentItems}
         searchItems={searchItems}
         searchPlaceholder="ค้นหาโครงการหรือเอกสาร"
