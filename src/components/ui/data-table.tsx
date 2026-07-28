@@ -1,17 +1,19 @@
-import type { TdHTMLAttributes, ThHTMLAttributes } from "react";
+import type { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function DataTable({
   children,
-  className
+  className,
+  tableClassName
 }: {
   children: React.ReactNode;
   className?: string;
+  tableClassName?: string;
 }) {
   return (
     <div className={cn("overflow-x-auto", className)}>
-      <table className="min-w-full border-collapse text-left">{children}</table>
+      <table className={cn("w-full border-collapse text-left", tableClassName)}>{children}</table>
     </div>
   );
 }
@@ -23,7 +25,7 @@ export function DataTableHead({
 }) {
   return (
     <thead>
-      <tr className="border-b border-gray-300 text-base font-semibold text-black">{children}</tr>
+      <tr className="border-b border-gray-300 text-xs font-semibold text-black md:text-base">{children}</tr>
     </thead>
   );
 }
@@ -37,7 +39,7 @@ export function DataTableHeaderCell({
   className?: string;
 } & ThHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <th className={cn("whitespace-nowrap px-3 py-3", className)} {...props}>
+    <th className={cn("overflow-hidden whitespace-nowrap px-2 py-2.5 md:px-3 md:py-3", className)} {...props}>
       {children}
     </th>
   );
@@ -75,12 +77,17 @@ export function DataTableBody({
 
 export function DataTableRow({
   children,
-  className
+  className,
+  ...props
 }: {
   children: React.ReactNode;
   className?: string;
-}) {
-  return <tr className={cn("border-b border-gray-300 text-base text-black", className)}>{children}</tr>;
+} & HTMLAttributes<HTMLTableRowElement>) {
+  return (
+    <tr className={cn("border-b border-gray-300 text-xs text-black data-[selected=true]:bg-gray-50 md:text-base", className)} {...props}>
+      {children}
+    </tr>
+  );
 }
 
 export function DataTableCell({
@@ -92,7 +99,7 @@ export function DataTableCell({
   className?: string;
 } & TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <td className={cn("px-3 py-4", className)} {...props}>
+    <td className={cn("overflow-hidden px-2 py-3 md:px-3 md:py-4", className)} {...props}>
       {children}
     </td>
   );

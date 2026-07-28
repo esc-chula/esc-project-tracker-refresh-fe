@@ -4,6 +4,7 @@ import {
   getDocumentStatusLabel,
   getDocumentTypeLabel,
   getProjectTypeLabel,
+  normalizeDocumentStatus,
   projectTypeFilterOptions
 } from "@/lib/catalog";
 
@@ -22,29 +23,69 @@ export type DocumentExplorerRow = {
 };
 
 export const departmentOptions = projectTypeFilterOptions;
-export { documentStatusOptions, documentTypeOptions, getDocumentStatusLabel, getDocumentTypeLabel };
+export {
+  documentStatusOptions,
+  documentTypeOptions,
+  getDocumentStatusLabel,
+  getDocumentTypeLabel,
+  normalizeDocumentStatus
+};
 
 export function getDepartmentLabel(projectType: string) {
   return getProjectTypeLabel(projectType);
 }
 
 export function getDocumentStatusClassName(status: string) {
-  switch (status) {
+  switch (normalizeDocumentStatus(status)) {
     case "approved":
-      return "text-green-500";
-    case "pending":
-      return "text-amber-500";
-    case "rejected":
-      return "text-red-600";
+      return "text-emerald-500";
+    case "submitted":
+      return "text-yellow-500";
+    case "returned":
+      return "text-red-500";
     default:
       return "text-gray-400";
   }
 }
 
+export function getDocumentDisplayStatusLabel(status: string) {
+  switch (normalizeDocumentStatus(status)) {
+    case "draft":
+      return "ฉบับร่าง";
+    case "submitted":
+      return "กำลังตรวจสอบ";
+    case "returned":
+      return "ตีกลับ";
+    case "approved":
+      return "อนุมัติ";
+  }
+}
+
+export function getDocumentStatusBadgeClassName(status: string) {
+  switch (normalizeDocumentStatus(status)) {
+    case "approved":
+      return "bg-emerald-500 text-white";
+    case "submitted":
+      return "bg-yellow-500 text-white";
+    case "returned":
+      return "bg-red-500 text-white";
+  }
+}
+
 export function formatUpdatedAt(updatedAt: string) {
-  return new Intl.DateTimeFormat("th-TH", {
+  const date = new Date(updatedAt);
+  const dateLabel = new Intl.DateTimeFormat("th-TH", {
     day: "numeric",
     month: "short",
-    year: "2-digit"
-  }).format(new Date(updatedAt));
+    year: "2-digit",
+    timeZone: "Asia/Bangkok"
+  }).format(date);
+  const timeLabel = new Intl.DateTimeFormat("th-TH", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Bangkok"
+  }).format(date);
+
+  return `${dateLabel} ${timeLabel} น.`;
 }

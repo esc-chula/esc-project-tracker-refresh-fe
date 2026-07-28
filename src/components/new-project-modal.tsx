@@ -1,65 +1,62 @@
 "use client";
 
 import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getProjectRoute, previewNextProjectCode, projectTypeOptions } from "@/lib/api";
-import { Button } from "@/components/ui/button";
-import { CancelButton } from "@/components/ui/cancel-button";
-import { FormInput, FormSelect, FormTextarea } from "@/components/ui/form-fields";
+import type { Project } from "@/lib/api";
+import { createProject, getAPIErrorMessage, getProjectRoute, previewNextProjectCode, updateProject } from "@/lib/api";
+import { projectTypeFilterOptions } from "@/lib/catalog";
+import { FormInput, FormSelect } from "@/components/ui/form-fields";
+import { FormModalActions } from "@/components/ui/form-modal-actions";
 import { FormModalShell } from "@/components/ui/form-modal-shell";
-
-type ErrorPayload = {
-  detail?: string;
-  title?: string;
-  errors?: Array<{
-    message?: string;
-    error?: string;
-  }>;
-};
 
 type NewProjectModalProps = {
   apiBaseURL: string;
-  open: boolean;
   onClose: () => void;
+  onCreated?: (input: { message: string; route: string }) => void;
+  onUpdated?: (project: Project) => void;
+  open: boolean;
+  project?: Project;
 };
 
-function getAPIErrorMessage(payload: ErrorPayload | null, fallback: string) {
-  if (!payload) {
-    return fallback;
+type ProjectFormState = {
+  errorMessage: string;
+  isPreviewLoading: boolean;
+  name: string;
+  projectCode: string;
+  type: string;
+};
+
+function buildInitialProjectState(project?: Project): ProjectFormState {
+  return {
+    errorMessage: "",
+    isPreviewLoading: false,
+    name: project?.name ?? "",
+    projectCode: project?.projectCode ?? "",
+    type: project?.type ?? ""
+  };
+}
+
+export function NewProjectModal(props: NewProjectModalProps) {
+  const { open, project } = props;
+
+  if (!open) {
+    return null;
   }
 
-  const firstError = payload.errors?.[0];
-  return firstError?.message || firstError?.error || payload.detail || payload.title || fallback;
+  return <ProjectModalForm key={project?.id ?? "create-project"} {...props} />;
 }
 
-function getTodayInBangkok(): string {
-  return new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Asia/Bangkok",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).format(new Date());
-}
-
-export function NewProjectModal({ apiBaseURL, open, onClose }: NewProjectModalProps) {
+function ProjectModalForm({ apiBaseURL, onClose, onCreated, onUpdated, project }: NewProjectModalProps) {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [type, setType] = useState("");
-  const [detail, setDetail] = useState("");
-  const [projectCode, setProjectCode] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [formState, setFormState] = useState<ProjectFormState>(() => buildInitialProjectState(project));
   const [isPending, startTransition] = useTransition();
   const previewRequestIDRef = useRef(0);
+  const isEditing = Boolean(project);
 
   function handleClose() {
     previewRequestIDRef.current += 1;
-    setName("");
-    setType("");
-    setDetail("");
-    setProjectCode("");
-    setErrorMessage("");
-    setIsPreviewLoading(false);
+    setFormState(buildInitialProjectState(project));
     onClose();
   }
 
@@ -71,40 +68,43 @@ export function NewProjectModal({ apiBaseURL, open, onClose }: NewProjectModalPr
     previewRequestIDRef.current += 1;
     const requestID = previewRequestIDRef.current;
 
-    setType(nextType);
-    setProjectCode("");
-    setErrorMessage("");
+    setFormState((current) => ({
+      ...current,
+      errorMessage: "",
+      isPreviewLoading: Boolean(nextType),
+      projectCode: "",
+      type: nextType
+    }));
 
     if (!nextType) {
-      setIsPreviewLoading(false);
       return;
     }
-
-    setIsPreviewLoading(true);
 
     try {
       const nextCode = await previewNextProjectCode(nextType);
       if (previewRequestIDRef.current !== requestID) {
         return;
       }
-      setProjectCode(nextCode);
+
+      setFormState((current) => ({
+        ...current,
+        isPreviewLoading: false,
+        projectCode: nextCode
+      }));
     } catch {
       if (previewRequestIDRef.current !== requestID) {
         return;
       }
-      setErrorMessage("ไม่สามารถพรีวิวรหัสโครงการได้");
-    } finally {
-      if (previewRequestIDRef.current === requestID) {
-        setIsPreviewLoading(false);
-      }
+
+      setFormState((current) => ({
+        ...current,
+        errorMessage: "ไม่สามารถพรีวิวรหัสโครงการได้",
+        isPreviewLoading: false
+      }));
     }
   }
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         handleCloseEvent();
@@ -113,119 +113,119 @@ export function NewProjectModal({ apiBaseURL, open, onClose }: NewProjectModalPr
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [open]);
-
-  if (!open) {
-    return null;
-  }
+  }, []);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setErrorMessage("");
 
-    if (!name.trim() || !type) {
-      setErrorMessage("กรุณากรอกชื่อโครงการและเลือกประเภทโครงการ");
+    if (!formState.name.trim() || !formState.type) {
+      setFormState((current) => ({
+        ...current,
+        errorMessage: "กรุณากรอกชื่อโครงการและเลือกประเภทโครงการ"
+      }));
       return;
     }
 
+    setFormState((current) => ({
+      ...current,
+      errorMessage: ""
+    }));
+
     startTransition(async () => {
       try {
-        const response = await fetch(`${apiBaseURL}/api/v1/projects`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            name: name.trim(),
-            type,
-            reserveDate: getTodayInBangkok(),
-            detail: detail.trim()
-          })
-        });
+        if (project) {
+          const result = await updateProject({
+            apiBaseURL,
+            id: project.id,
+            name: formState.name.trim(),
+            status: project.status,
+            type: formState.type
+          });
 
-        if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as ErrorPayload | null;
-          setErrorMessage(getAPIErrorMessage(payload, "ไม่สามารถเปิดโครงการใหม่ได้"));
+          if (result.error || !result.project) {
+            setFormState((current) => ({
+              ...current,
+              errorMessage: result.error ?? "ไม่สามารถแก้ไขโครงการได้"
+            }));
+            return;
+          }
+
+          onUpdated?.(result.project);
+          handleClose();
+          router.refresh();
           return;
         }
 
-        const payload = (await response.json()) as {
-          project?: { id: string; projectCode: string };
-        };
-        handleClose();
-        if (payload.project) {
-          router.push(getProjectRoute(payload.project));
+        const result = await createProject({
+          apiBaseURL,
+          name: formState.name.trim(),
+          type: formState.type
+        });
+
+        if (result.error || !result.project) {
+          const payload = result.error ? { errors: [{ message: result.error }] } : null;
+          setFormState((current) => ({
+            ...current,
+            errorMessage: getAPIErrorMessage(payload, "ไม่สามารถเปิดโครงการใหม่ได้")
+          }));
+          return;
         }
-        router.refresh();
+
+        handleClose();
+        onCreated?.({
+          message: "เปิดโครงการสำเร็จแล้ว",
+          route: getProjectRoute(result.project)
+        });
       } catch {
-        setErrorMessage("ไม่สามารถเชื่อมต่อกับ API ได้");
+        setFormState((current) => ({
+          ...current,
+          errorMessage: "ไม่สามารถเชื่อมต่อกับ API ได้"
+        }));
       }
     });
   }
 
   return (
-    <FormModalShell onClose={handleClose} title="เปิดโครงการใหม่">
+    <FormModalShell onClose={handleClose} title={isEditing ? "แก้ไขโครงการ" : "เปิดโครงการใหม่"}>
       <form className="space-y-5" onSubmit={handleSubmit}>
         <label className="block space-y-2">
           <span className="text-m font-medium text-black">รหัสโครงการ</span>
-          <FormInput
-            disabled
-            placeholder={isPreviewLoading ? "กำลังโหลดรหัสโครงการ..." : "XXXX"}
-            value={projectCode}
-          />
+          <FormInput disabled placeholder={formState.isPreviewLoading ? "กำลังโหลดรหัสโครงการ..." : "XXXX"} value={formState.projectCode} />
         </label>
 
         <label className="block space-y-2">
           <span className="text-m font-medium text-black">
-            ชื่อโครงการ (TH) <span className="text-carmine">*</span>
-          </span>
-          <FormInput
-            onChange={(event) => setName(event.target.value)}
-            placeholder="กรอกชื่อโครงการ"
-            value={name}
-          />
-        </label>
-
-        <label className="block space-y-2">
-          <span className="text-m font-medium text-black">
-            ประเภทโครงการ <span className="text-carmine">*</span>
+            ประเภทโครงการ <span className="text-red-600">*</span>
           </span>
           <FormSelect
-            onChange={(event) => {
-              void handleTypeChange(event.target.value);
+            onValueChange={(nextValue) => {
+              void handleTypeChange(nextValue);
             }}
-            value={type}
-          >
-            <option value="">เลือกประเภทโครงการ</option>
-            {projectTypeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </FormSelect>
-        </label>
-
-        <label className="block space-y-2">
-          <span className="text-m font-medium text-black">รายละเอียด (optional)</span>
-          <FormTextarea
-            onChange={(event) => setDetail(event.target.value)}
-            placeholder="รายละเอียดเพิ่มเติม"
-            value={detail}
+            options={projectTypeFilterOptions}
+            placeholder="เลือกประเภทโครงการ"
+            value={formState.type}
           />
         </label>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
-          {errorMessage ? <div className="mr-auto text-base font-medium text-carmine">{errorMessage}</div> : null}
-          <CancelButton onClick={handleClose} />
-          <Button
-            className="h-12 rounded-2xl bg-carmine px-6 text-base font-semibold text-white hover:bg-red-800"
-            disabled={isPending}
-            type="submit"
-          >
-            {isPending ? "กำลังเปิดโครงการ..." : "+ เปิดโครงการ"}
-          </Button>
-        </div>
+        <label className="block space-y-2">
+          <span className="text-m font-medium text-black">
+            ชื่อโครงการ (TH) <span className="text-red-600">*</span>
+          </span>
+          <FormInput
+            onChange={(event) => setFormState((current) => ({ ...current, name: event.target.value }))}
+            placeholder="กรอกชื่อโครงการ"
+            value={formState.name}
+          />
+        </label>
+
+        <FormModalActions
+          errorMessage={formState.errorMessage}
+          isSubmitting={isPending}
+          onCancel={handleClose}
+          submitIcon={<Plus className="h-5 w-5" strokeWidth={2.5} />}
+          submitLabel={isEditing ? "บันทึก" : "เปิดโครงการ"}
+          submittingLabel={isEditing ? "กำลังบันทึก..." : "กำลังเปิดโครงการ..."}
+        />
       </form>
     </FormModalShell>
   );

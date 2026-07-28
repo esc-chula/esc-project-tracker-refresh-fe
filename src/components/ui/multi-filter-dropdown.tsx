@@ -190,13 +190,13 @@ export function MultiFilterDropdown({
     <>
       <div className={cn("relative", className)} ref={containerRef}>
         <Button
-          className="h-10 min-w-[88px] justify-between rounded-full bg-gray-100 px-5 text-base font-normal text-black hover:bg-gray-200"
+          className="h-9 min-w-[72px] justify-between rounded-full bg-gray-100 px-4 text-sm font-normal text-black hover:bg-gray-200 md:h-10 md:min-w-[88px] md:px-5 md:text-base"
           onClick={() => setOpen((currentOpen) => !currentOpen)}
           type="button"
           variant="ghost"
         >
           <span className="truncate">{triggerLabel}</span>
-          <ChevronDown className="ml-3 h-4 w-4 shrink-0" />
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 md:ml-3" />
         </Button>
       </div>
 

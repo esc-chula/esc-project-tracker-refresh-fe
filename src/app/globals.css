@@ -25,10 +25,31 @@
     --radius: 0.9rem;
     --sidebar: 355 74% 25%;
     --sidebar-foreground: 0 0% 100%;
-    --shell-gap: 1.5rem;
-    --shell-padding: 1.25rem;
+    --accepted: #49e6a4;
+    --pending: #ffbd5b;
+    --rejected: #ff7985;
+    --warning: #eab308;
+    --error: #ef4444;
+    --disabled: #eeeeee;
+    --shell-gap: 1rem;
+    --shell-padding: 0.875rem;
+    --sidebar-width-collapsed: 88px;
     --sidebar-width: 290px;
     --content-radius: 28px;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --shell-gap: 1.25rem;
+      --shell-padding: 1rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    :root {
+      --shell-gap: 1.5rem;
+      --shell-padding: 1.25rem;
+    }
   }
 
   * {

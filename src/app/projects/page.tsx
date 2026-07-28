@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ProjectsPageContent } from "@/components/projects-page-content";
-import { getCurrentUser, getProjects } from "@/lib/api";
+import { getAPIBaseURL, getCurrentUser, getGoogleLoginURL, getProjects } from "@/lib/api";
 
 export default async function ProjectsPage() {
   const cookieStore = await cookies();
@@ -10,14 +10,14 @@ export default async function ProjectsPage() {
   const currentUser = await getCurrentUser(cookieHeader);
 
   if (!currentUser) {
-    redirect("/");
+    redirect(getGoogleLoginURL());
   }
 
   const projects = await getProjects(cookieHeader);
-  const apiBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+  const apiBaseURL = getAPIBaseURL();
 
   return (
-    <AppShell currentUser={currentUser}>
+    <AppShell currentUser={currentUser} navItems={[{ label: "โครงการ" }]}>
       <ProjectsPageContent apiBaseURL={apiBaseURL} projects={projects} />
     </AppShell>
   );

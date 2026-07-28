@@ -3,27 +3,14 @@
 import { useMemo, useState } from "react";
 import { FileSearch, FolderOpen } from "lucide-react";
 import { getProjectRoute, type CurrentUser, type Project } from "@/lib/api";
-import { getRecentItems, type RecentItem } from "@/lib/recent-items";
-import {
-  DataTable,
-  DataTableBody,
-  DataTableCell,
-  DataTableHead,
-  DataTableHeaderCell,
-  DataTableRow,
-  EmptyTableRow
-} from "@/components/ui/data-table";
+import { ProjectCard } from "@/components/project-card";
+import { DocumentTable } from "@/components/ui/document-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageSearchBar } from "@/components/ui/page-search-bar";
 import { PageSectionHeader } from "@/components/ui/page-section-header";
-import { ProjectCard } from "@/components/project-card";
-import {
-  formatUpdatedAt,
-  getDocumentStatusClassName,
-  getDocumentStatusLabel,
-  getDocumentTypeLabel,
-  type DocumentExplorerRow
-} from "@/lib/document-view";
+import type { DocumentExplorerRow } from "@/lib/document-view";
+import { getRecentItems, type RecentItem } from "@/lib/recent-items";
+import { buildGlobalSearchItems } from "@/lib/search-items";
 
 type HomePageClientProps = {
   currentUser: CurrentUser | null;
@@ -36,6 +23,10 @@ export function HomePageClient({ currentUser, initialProjects, initialDocuments 
   const [recentItems] = useState<RecentItem[]>(() => getRecentItems());
 
   const latestProjects = useMemo(() => initialProjects.slice(0, 4), [initialProjects]);
+  const searchItems = useMemo(
+    () => buildGlobalSearchItems({ projects: initialProjects, documents: initialDocuments }),
+    [initialDocuments, initialProjects]
+  );
 
   return (
     <div className="space-y-8">
@@ -44,6 +35,7 @@ export function HomePageClient({ currentUser, initialProjects, initialDocuments 
         onChange={setQuery}
         placeholder="ค้นหาโครงการหรือเอกสาร"
         recentItems={recentItems}
+        searchItems={searchItems}
         searchScope="all"
         value={query}
       />
@@ -81,36 +73,12 @@ export function HomePageClient({ currentUser, initialProjects, initialDocuments 
           title="เอกสารล่าสุด"
         />
 
-        <DataTable className="overflow-hidden rounded-2xl">
-          <DataTableHead>
-            <DataTableHeaderCell>รหัสเอกสาร</DataTableHeaderCell>
-            <DataTableHeaderCell>ชื่อโครงการ</DataTableHeaderCell>
-            <DataTableHeaderCell>ชื่อเอกสาร</DataTableHeaderCell>
-            <DataTableHeaderCell>นิสิตผู้รับผิดชอบ</DataTableHeaderCell>
-            <DataTableHeaderCell>เบอร์โทรศัพท์</DataTableHeaderCell>
-            <DataTableHeaderCell>สถานะ</DataTableHeaderCell>
-            <DataTableHeaderCell>อัปเดตล่าสุด</DataTableHeaderCell>
-          </DataTableHead>
-          <DataTableBody>
-            {initialDocuments.length > 0 ? (
-              initialDocuments.map((row) => (
-                <DataTableRow className="text-sm" key={row.id}>
-                  <DataTableCell>{row.projectCode}-{row.documentCode}</DataTableCell>
-                  <DataTableCell>{row.projectName}</DataTableCell>
-                  <DataTableCell>{row.name || getDocumentTypeLabel(row.type, row.subType)}</DataTableCell>
-                  <DataTableCell>{currentUser?.displayName || "-"}</DataTableCell>
-                  <DataTableCell>-</DataTableCell>
-                  <DataTableCell className={`${getDocumentStatusClassName(row.status)} font-medium`}>
-                    {getDocumentStatusLabel(row.status)}
-                  </DataTableCell>
-                  <DataTableCell className="text-gray-500">{formatUpdatedAt(row.updatedAt)}</DataTableCell>
-                </DataTableRow>
-              ))
-            ) : (
-              <EmptyTableRow colSpan={7}>ไม่พบเอกสาร</EmptyTableRow>
-            )}
-          </DataTableBody>
-        </DataTable>
+        <DocumentTable
+          documents={initialDocuments}
+          emptyText="ไม่พบเอกสาร"
+          ownerDisplayName={currentUser?.displayName || "-"}
+          ownerPhone={currentUser?.phone}
+        />
       </section>
     </div>
   );

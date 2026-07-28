@@ -1,76 +1,87 @@
 "use client";
 
 import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
+import { Plus } from "lucide-react";
 import type { Document, Project } from "@/lib/api";
-import { previewNextDocumentCode, splitDocumentTypeOption } from "@/lib/api";
+import { createDocument, getAPIErrorMessage, previewNextDocumentCode, splitDocumentTypeOption, updateDocument } from "@/lib/api";
 import { documentTypeOptions } from "@/lib/catalog";
-import { Button } from "@/components/ui/button";
-import { CancelButton } from "@/components/ui/cancel-button";
-import { FormInput, FormSelect, FormTextarea } from "@/components/ui/form-fields";
+import { FormInput, FormSelect } from "@/components/ui/form-fields";
+import { FormModalActions } from "@/components/ui/form-modal-actions";
 import { FormModalShell } from "@/components/ui/form-modal-shell";
-
-type ErrorPayload = {
-  detail?: string;
-  title?: string;
-  errors?: Array<{
-    message?: string;
-    error?: string;
-  }>;
-};
 
 type NewDocumentModalProps = {
   apiBaseURL: string;
-  open: boolean;
-  projectId?: string;
-  projectCode?: string;
-  projects?: Project[];
+  document?: Document;
   onClose: () => void;
   onCreated: (document: Document) => void;
+  onCreateSuccess?: (message: string) => void;
+  onUpdated?: (document: Document) => void;
+  open: boolean;
+  projectCode?: string;
+  projectId?: string;
+  projects?: Project[];
 };
 
-function getAPIErrorMessage(payload: ErrorPayload | null, fallback: string) {
-  if (!payload) {
-    return fallback;
-  }
+type DocumentFormState = {
+  documentCode: string;
+  errorMessage: string;
+  isPreviewLoading: boolean;
+  name: string;
+  selectedProjectId: string;
+  typeValue: string;
+};
 
-  const firstError = payload.errors?.[0];
-  return firstError?.message || firstError?.error || payload.detail || payload.title || fallback;
+function buildInitialDocumentState(input: {
+  document?: Document;
+  projectId?: string;
+}): DocumentFormState {
+  const { document, projectId } = input;
+
+  return {
+    documentCode: document?.documentCode ?? "",
+    errorMessage: "",
+    isPreviewLoading: false,
+    name: document?.name ?? "",
+    selectedProjectId: document?.projectId ?? projectId ?? "",
+    typeValue: document ? (document.subType ? `${document.type}-${document.subType}` : document.type) : ""
+  };
 }
 
-export function NewDocumentModal({
+export function NewDocumentModal(props: NewDocumentModalProps) {
+  const { document, open, projectId } = props;
+
+  if (!open) {
+    return null;
+  }
+
+  return <DocumentModalForm key={document?.id ?? `create-document-${projectId ?? "global"}`} {...props} />;
+}
+
+function DocumentModalForm({
   apiBaseURL,
-  open,
-  projectId,
-  projectCode,
-  projects = [],
+  document,
   onClose,
-  onCreated
+  onCreated,
+  onCreateSuccess,
+  onUpdated,
+  projectCode,
+  projectId,
+  projects = []
 }: NewDocumentModalProps) {
-  const [name, setName] = useState("");
-  const [selectedProjectId, setSelectedProjectId] = useState(projectId ?? "");
-  const [typeValue, setTypeValue] = useState("");
-  const [detail, setDetail] = useState("");
-  const [documentCode, setDocumentCode] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [formState, setFormState] = useState<DocumentFormState>(() => buildInitialDocumentState({ document, projectId }));
   const [isPending, startTransition] = useTransition();
   const previewRequestIDRef = useRef(0);
+  const isEditing = Boolean(document);
 
   const selectedProject =
-    projects.find((project) => project.id === selectedProjectId) ??
+    projects.find((item) => item.id === formState.selectedProjectId) ??
     (projectId ? { id: projectId, projectCode: projectCode ?? "" } : null);
 
-  const previewCode = documentCode && selectedProject?.projectCode ? `${selectedProject.projectCode}-${documentCode}` : "";
+  const previewCode = formState.documentCode && selectedProject?.projectCode ? `${selectedProject.projectCode}-${formState.documentCode}` : "";
 
   function handleClose() {
     previewRequestIDRef.current += 1;
-    setName("");
-    setSelectedProjectId(projectId ?? "");
-    setTypeValue("");
-    setDetail("");
-    setDocumentCode("");
-    setErrorMessage("");
-    setIsPreviewLoading(false);
+    setFormState(buildInitialDocumentState({ document, projectId }));
     onClose();
   }
 
@@ -83,49 +94,58 @@ export function NewDocumentModal({
     const requestID = previewRequestIDRef.current;
     const { type } = splitDocumentTypeOption(nextTypeValue);
 
-    setDocumentCode("");
-    setErrorMessage("");
+    setFormState((current) => ({
+      ...current,
+      documentCode: "",
+      errorMessage: "",
+      isPreviewLoading: Boolean(type && nextProjectId)
+    }));
 
     if (!type || !nextProjectId) {
-      setIsPreviewLoading(false);
       return;
     }
-
-    setIsPreviewLoading(true);
 
     try {
       const nextCode = await previewNextDocumentCode(type);
       if (previewRequestIDRef.current !== requestID) {
         return;
       }
-      setDocumentCode(nextCode);
+
+      setFormState((current) => ({
+        ...current,
+        documentCode: nextCode,
+        isPreviewLoading: false
+      }));
     } catch {
       if (previewRequestIDRef.current !== requestID) {
         return;
       }
-      setErrorMessage("ไม่สามารถพรีวิวรหัสเอกสารได้");
-    } finally {
-      if (previewRequestIDRef.current === requestID) {
-        setIsPreviewLoading(false);
-      }
+
+      setFormState((current) => ({
+        ...current,
+        errorMessage: "ไม่สามารถพรีวิวรหัสเอกสารได้",
+        isPreviewLoading: false
+      }));
     }
   }
 
   async function handleTypeChange(nextTypeValue: string) {
-    setTypeValue(nextTypeValue);
-    await previewDocumentCode(nextTypeValue, selectedProjectId);
+    setFormState((current) => ({
+      ...current,
+      typeValue: nextTypeValue
+    }));
+    await previewDocumentCode(nextTypeValue, formState.selectedProjectId);
   }
 
   async function handleProjectChange(nextProjectId: string) {
-    setSelectedProjectId(nextProjectId);
-    await previewDocumentCode(typeValue, nextProjectId);
+    setFormState((current) => ({
+      ...current,
+      selectedProjectId: nextProjectId
+    }));
+    await previewDocumentCode(formState.typeValue, nextProjectId);
   }
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         handleCloseEvent();
@@ -134,139 +154,140 @@ export function NewDocumentModal({
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [open]);
-
-  if (!open) {
-    return null;
-  }
+  }, []);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setErrorMessage("");
 
-    if (!selectedProjectId || !name.trim() || !typeValue) {
-      setErrorMessage("กรุณาเลือกโครงการ กรอกชื่อเอกสาร และเลือกประเภทเอกสาร");
+    if (!formState.selectedProjectId || !formState.name.trim() || !formState.typeValue) {
+      setFormState((current) => ({
+        ...current,
+        errorMessage: "กรุณาเลือกโครงการ กรอกชื่อเอกสาร และเลือกประเภทเอกสาร"
+      }));
       return;
     }
 
-    const { type, subType } = splitDocumentTypeOption(typeValue);
+    setFormState((current) => ({
+      ...current,
+      errorMessage: ""
+    }));
+
+    const { type, subType } = splitDocumentTypeOption(formState.typeValue);
 
     startTransition(async () => {
       try {
-        const response = await fetch(`${apiBaseURL}/api/v1/projects/${selectedProjectId}/documents`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            name: name.trim(),
+        if (document) {
+          const result = await updateDocument({
+            apiBaseURL,
+            id: document.id,
+            name: formState.name.trim(),
             type,
-            subType: subType || undefined,
-            detail: detail.trim()
-          })
-        });
+            subType: subType || undefined
+          });
 
-        if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as ErrorPayload | null;
-          setErrorMessage(getAPIErrorMessage(payload, "ไม่สามารถเปิดเอกสารใหม่ได้"));
+          if (result.error || !result.document) {
+            setFormState((current) => ({
+              ...current,
+              errorMessage: result.error ?? "ไม่สามารถแก้ไขเอกสารได้"
+            }));
+            return;
+          }
+
+          onUpdated?.(result.document);
+          handleClose();
           return;
         }
 
-        const payload = (await response.json()) as { document?: Document };
-        if (payload.document) {
-          onCreated(payload.document);
+        const result = await createDocument({
+          apiBaseURL,
+          projectId: formState.selectedProjectId,
+          name: formState.name.trim(),
+          type,
+          subType: subType || undefined
+        });
+
+        if (result.error || !result.document) {
+          const payload = result.error ? { errors: [{ message: result.error }] } : null;
+          setFormState((current) => ({
+            ...current,
+            errorMessage: getAPIErrorMessage(payload, "ไม่สามารถสร้างเอกสารใหม่ได้")
+          }));
+          return;
         }
+
+        onCreated(result.document);
         handleClose();
+        onCreateSuccess?.("สร้างเอกสารสำเร็จแล้ว");
       } catch {
-        setErrorMessage("ไม่สามารถเชื่อมต่อกับ API ได้");
+        setFormState((current) => ({
+          ...current,
+          errorMessage: "ไม่สามารถเชื่อมต่อกับ API ได้"
+        }));
       }
     });
   }
 
   return (
-    <FormModalShell onClose={handleClose} title="เปิดเอกสารใหม่">
+    <FormModalShell onClose={handleClose} title={isEditing ? "แก้ไขเอกสาร" : "สร้างเอกสารใหม่"}>
       <form className="space-y-5" onSubmit={handleSubmit}>
         <label className="block space-y-2">
           <span className="text-m font-medium text-black">รหัสเอกสาร</span>
-          <FormInput
-            disabled
-            placeholder={isPreviewLoading ? "กำลังโหลดรหัสเอกสาร..." : "XXXX-XXXX"}
-            value={previewCode}
-          />
+          <FormInput disabled placeholder={formState.isPreviewLoading ? "กำลังโหลดรหัสเอกสาร..." : "XXXX-XXXX"} value={previewCode} />
         </label>
 
-        {projects.length > 0 ? (
+        {projects.length > 0 && !isEditing ? (
           <label className="block space-y-2">
             <span className="text-m font-medium text-black">
-              โครงการ <span className="text-carmine">*</span>
+              โครงการ <span className="text-red-600">*</span>
             </span>
             <FormSelect
-              onChange={(event) => {
-                void handleProjectChange(event.target.value);
+              onValueChange={(nextValue) => {
+                void handleProjectChange(nextValue);
               }}
-              value={selectedProjectId}
-            >
-              <option value="">เลือกโครงการ</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.projectCode} {project.name}
-                </option>
-              ))}
-            </FormSelect>
+              options={projects.map((item) => ({
+                label: `${item.projectCode} ${item.name}`,
+                value: item.id
+              }))}
+              placeholder="เลือกโครงการ"
+              searchPlaceholder="ค้นหาโครงการ"
+              value={formState.selectedProjectId}
+            />
           </label>
         ) : null}
 
         <label className="block space-y-2">
           <span className="text-m font-medium text-black">
-            ชื่อเอกสาร <span className="text-carmine">*</span>
+            ประเภทเอกสาร <span className="text-red-600">*</span>
           </span>
-          <FormInput
-            onChange={(event) => setName(event.target.value)}
-            placeholder="กรอกชื่อเอกสาร"
-            value={name}
+          <FormSelect
+            onValueChange={(nextValue) => {
+              void handleTypeChange(nextValue);
+            }}
+            options={documentTypeOptions}
+            placeholder="เลือกประเภทเอกสาร"
+            value={formState.typeValue}
           />
         </label>
 
         <label className="block space-y-2">
           <span className="text-m font-medium text-black">
-            ประเภทเอกสาร <span className="text-carmine">*</span>
+            ชื่อเอกสาร <span className="text-red-600">*</span>
           </span>
-          <FormSelect
-            onChange={(event) => {
-              void handleTypeChange(event.target.value);
-            }}
-            value={typeValue}
-          >
-            <option value="">เลือกประเภทเอกสาร</option>
-            {documentTypeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </FormSelect>
-        </label>
-
-        <label className="block space-y-2">
-          <span className="text-m font-medium text-black">รายละเอียด (optional)</span>
-          <FormTextarea
-            onChange={(event) => setDetail(event.target.value)}
-            placeholder="รายละเอียดเพิ่มเติม"
-            value={detail}
+          <FormInput
+            onChange={(event) => setFormState((current) => ({ ...current, name: event.target.value }))}
+            placeholder="กรอกชื่อเอกสาร"
+            value={formState.name}
           />
         </label>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
-          {errorMessage ? <div className="mr-auto text-base font-medium text-carmine">{errorMessage}</div> : null}
-          <CancelButton onClick={handleClose} />
-          <Button
-            className="h-12 rounded-2xl bg-carmine px-6 text-base font-semibold text-white hover:bg-red-800"
-            disabled={isPending}
-            type="submit"
-          >
-            {isPending ? "กำลังเปิดเอกสาร..." : "+ เปิดเอกสาร"}
-          </Button>
-        </div>
+        <FormModalActions
+          errorMessage={formState.errorMessage}
+          isSubmitting={isPending}
+          onCancel={handleClose}
+          submitIcon={<Plus className="h-5 w-5" strokeWidth={2.5} />}
+          submitLabel={isEditing ? "บันทึก" : "สร้างเอกสาร"}
+          submittingLabel={isEditing ? "กำลังบันทึก..." : "กำลังสร้างเอกสาร..."}
+        />
       </form>
     </FormModalShell>
   );

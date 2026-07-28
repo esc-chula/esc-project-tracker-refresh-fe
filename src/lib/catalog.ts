@@ -56,11 +56,30 @@ export const documentTypeOptions = [
 
 export const documentStatusOptions = [
   { value: "draft", label: "ฉบับร่าง" },
-  { value: "rejected", label: "เอกสารถูกตีกลับ" },
-  { value: "pending", label: "ส่งให้เลขาตรวจสอบ" },
-  { value: "approved", label: "ส่งให้กิจการนิสิตแล้ว" },
-  { value: "completed", label: "เอกสารถูกอนุมัติแล้ว" }
+  { value: "submitted", label: "กำลังตรวจสอบ" },
+  { value: "returned", label: "ตีกลับ" },
+  { value: "approved", label: "อนุมัติ" }
 ] as const satisfies readonly CatalogOption[];
+
+export type DocumentStatus = (typeof documentStatusOptions)[number]["value"];
+
+export function normalizeDocumentStatus(status: string): DocumentStatus {
+  switch (status) {
+    case "draft":
+    case "submitted":
+    case "returned":
+    case "approved":
+      return status;
+    case "pending":
+      return "submitted";
+    case "rejected":
+      return "returned";
+    case "completed":
+      return "approved";
+    default:
+      return "draft";
+  }
+}
 
 export function getProjectTypeLabel(projectType: string) {
   return projectTypeOptions.find((option) => option.value === projectType)?.label ?? "ไม่ระบุฝ่าย";
@@ -77,5 +96,6 @@ export function getDocumentTypeLabel(type: string, subType?: string) {
 }
 
 export function getDocumentStatusLabel(status: string) {
-  return documentStatusOptions.find((option) => option.value === status)?.label ?? status;
+  const normalizedStatus = normalizeDocumentStatus(status);
+  return documentStatusOptions.find((option) => option.value === normalizedStatus)?.label ?? normalizedStatus;
 }

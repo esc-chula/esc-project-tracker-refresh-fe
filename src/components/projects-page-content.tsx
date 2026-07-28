@@ -1,39 +1,29 @@
 "use client";
 
-import Link from "next/link";
+import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
-import type { Project } from "@/lib/api";
-import { getProjectRoute } from "@/lib/api";
-import { ProjectCard } from "@/components/project-card";
 import { NewProjectModal } from "@/components/new-project-modal";
+import { ActionSuccessPopup } from "@/components/ui/action-success-popup";
+import { ProjectCard } from "@/components/project-card";
 import { Button } from "@/components/ui/button";
-import {
-  DataTable,
-  DataTableBody,
-  DataTableCell,
-  DataTableHead,
-  DataTableHeaderCell,
-  DataTableRow,
-  EmptyTableRow,
-  SortableHeaderCell
-} from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MultiFilterDropdown } from "@/components/ui/multi-filter-dropdown";
 import { PageSearchBar } from "@/components/ui/page-search-bar";
 import { PageToolbar } from "@/components/ui/page-toolbar";
-import { type SortDirection, type SortOption, SortControls } from "@/components/ui/sort-controls";
-import { ViewToggle } from "@/components/ui/view-toggle";
+import { SortControls, type SortDirection, type SortOption } from "@/components/ui/sort-controls";
+import type { Project } from "@/lib/api";
+import { getProjectRoute } from "@/lib/api";
 import { departmentOptions, getDepartmentLabel } from "@/lib/document-view";
 import { getRecentItems, type RecentItem } from "@/lib/recent-items";
+import { buildGlobalSearchItems } from "@/lib/search-items";
 
-type ViewMode = "table" | "card";
 type ProjectSortKey = "updatedAt" | "projectCode" | "name";
 
-const projectSortOptions: readonly SortOption<ProjectSortKey>[] = [
+const projectSortOptions = [
   { value: "updatedAt", label: "เวลา" },
   { value: "projectCode", label: "รหัสโครงการ" },
   { value: "name", label: "ชื่อโครงการ" }
-];
+] satisfies readonly SortOption<ProjectSortKey>[];
 
 export function ProjectsPageContent({
   apiBaseURL,
@@ -46,16 +36,16 @@ export function ProjectsPageContent({
   const [query, setQuery] = useState("");
   const [recentItems] = useState<RecentItem[]>(() => getRecentItems());
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [sortBy, setSortBy] = useState<ProjectSortKey>("updatedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [pendingRoute, setPendingRoute] = useState("");
+
+  const searchItems = useMemo(() => buildGlobalSearchItems({ projects }), [projects]);
 
   const filteredProjects = useMemo(() => {
     const nextProjects = projects.filter((project) => {
-      const matchesDepartment =
-        selectedDepartments.length === 0 || selectedDepartments.includes(project.type);
-
-      return matchesDepartment;
+      return selectedDepartments.length === 0 || selectedDepartments.includes(project.type);
     });
 
     nextProjects.sort((left, right) => {
@@ -65,136 +55,65 @@ export function ProjectsPageContent({
         return (new Date(left.updatedAt).getTime() - new Date(right.updatedAt).getTime()) * direction;
       }
 
-      return left[sortBy].localeCompare(right[sortBy]) * direction;
+      return left[sortBy].localeCompare(right[sortBy], "th") * direction;
     });
 
     return nextProjects;
   }, [projects, selectedDepartments, sortBy, sortDirection]);
-
-  function handleTableSort(nextSortBy: ProjectSortKey) {
-    if (sortBy === nextSortBy) {
-      setSortDirection((currentDirection) => (currentDirection === "asc" ? "desc" : "asc"));
-      return;
-    }
-
-    setSortBy(nextSortBy);
-    setSortDirection(nextSortBy === "updatedAt" ? "desc" : "asc");
-  }
-
-  function getActiveDirection(column: ProjectSortKey) {
-    return sortBy === column ? sortDirection : undefined;
-  }
-
-  const toolbarControls = (
-    <>
-      <MultiFilterDropdown
-        onChange={setSelectedDepartments}
-        options={departmentOptions}
-        placeholder="ประเภทโครงการ"
-        popupClassName="w-[340px]"
-        selectedValues={selectedDepartments}
-      />
-      {viewMode === "card" ? (
-        <SortControls
-          onSortByChange={setSortBy}
-          onSortDirectionChange={setSortDirection}
-          options={projectSortOptions}
-          sortBy={sortBy}
-          sortDirection={sortDirection}
-        />
-      ) : null}
-    </>
-  );
 
   return (
     <>
       <div className="space-y-8">
         <PageToolbar
           action={
-            <Button
-              className="h-[48px] rounded-2xl bg-carmine px-6 text-base font-semibold text-white hover:bg-red-800"
-              onClick={() => setIsCreateModalOpen(true)}
-              type="button"
-            >
-              + เปิดโครงการใหม่
+            <Button onClick={() => setIsCreateModalOpen(true)} type="button" variant="appRed">
+              <Plus className="h-5 w-5" strokeWidth={2.5} />
+              เปิดโครงการใหม่
             </Button>
           }
-          controls={toolbarControls}
+          controls={
+            <>
+              <MultiFilterDropdown
+                onChange={setSelectedDepartments}
+                options={departmentOptions}
+                placeholder="ประเภทโครงการ"
+                popupClassName="w-[340px]"
+                selectedValues={selectedDepartments}
+              />
+              <SortControls
+                onSortByChange={setSortBy}
+                onSortDirectionChange={setSortDirection}
+                options={projectSortOptions}
+                sortBy={sortBy}
+                sortDirection={sortDirection}
+              />
+            </>
+          }
           search={
             <PageSearchBar
-              emptyRecentText="ยังไม่มีรายการโครงการล่าสุด"
+              emptyRecentText="ยังไม่มีรายการล่าสุด"
               onChange={setQuery}
-              placeholder="ค้นหาโครงการ"
+              placeholder="ค้นหาโครงการหรือเอกสาร"
               recentItems={recentItems}
-              searchScope="projects"
+              searchItems={searchItems}
+              searchScope="all"
               value={query}
             />
           }
-          trailing={<ViewToggle onChange={setViewMode} value={viewMode} />}
         />
 
         {filteredProjects.length > 0 ? (
-          viewMode === "card" ? (
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-              {filteredProjects.map((project) => (
-                <ProjectCard
-                  code={project.projectCode}
-                  href={getProjectRoute(project)}
-                  key={project.id}
-                  subtitle={project.detail || getDepartmentLabel(project.type)}
-                  title={project.name}
-                />
-              ))}
-            </div>
-          ) : (
-            <DataTable>
-              <DataTableHead>
-                <SortableHeaderCell
-                  activeDirection={getActiveDirection("projectCode")}
-                  label="รหัสโครงการ"
-                  onClick={() => handleTableSort("projectCode")}
-                />
-                <DataTableHeaderCell>ฝ่าย</DataTableHeaderCell>
-                <SortableHeaderCell
-                  activeDirection={getActiveDirection("name")}
-                  label="ชื่อโครงการ"
-                  onClick={() => handleTableSort("name")}
-                />
-              </DataTableHead>
-              <DataTableBody>
-                {filteredProjects.map((project) => (
-                  <DataTableRow key={project.id}>
-                    <DataTableCell className="whitespace-nowrap">
-                      <Link className="hover:underline" href={getProjectRoute(project)}>
-                        {project.projectCode}
-                      </Link>
-                    </DataTableCell>
-                    <DataTableCell>{getDepartmentLabel(project.type)}</DataTableCell>
-                    <DataTableCell>{project.name}</DataTableCell>
-                  </DataTableRow>
-                ))}
-              </DataTableBody>
-            </DataTable>
-          )
-        ) : viewMode === "table" ? (
-          <DataTable>
-            <DataTableHead>
-              <SortableHeaderCell
-                activeDirection={getActiveDirection("projectCode")}
-                label="รหัสโครงการ"
-                onClick={() => handleTableSort("projectCode")}
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+            {filteredProjects.map((project) => (
+              <ProjectCard
+                code={project.projectCode}
+                href={getProjectRoute(project)}
+                key={project.id}
+                subtitle={getDepartmentLabel(project.type)}
+                title={project.name}
               />
-              <DataTableHeaderCell>ฝ่าย</DataTableHeaderCell>
-              <SortableHeaderCell
-                activeDirection={getActiveDirection("name")}
-                label="ชื่อโครงการ"
-                onClick={() => handleTableSort("name")}
-              />
-            </DataTableHead>
-            <DataTableBody>
-              <EmptyTableRow colSpan={3}>ไม่พบโครงการ</EmptyTableRow>
-            </DataTableBody>
-          </DataTable>
+            ))}
+          </div>
         ) : (
           <EmptyState>ไม่พบโครงการ</EmptyState>
         )}
@@ -202,8 +121,25 @@ export function ProjectsPageContent({
 
       <NewProjectModal
         apiBaseURL={apiBaseURL}
+        onCreated={({ message, route }) => {
+          setPendingRoute(route);
+          setSuccessMessage(message);
+        }}
         onClose={() => setIsCreateModalOpen(false)}
         open={isCreateModalOpen}
+      />
+
+      <ActionSuccessPopup
+        message={successMessage}
+        onClose={() => {
+          const nextRoute = pendingRoute;
+          setSuccessMessage("");
+          setPendingRoute("");
+          if (nextRoute) {
+            window.location.href = nextRoute;
+          }
+        }}
+        open={Boolean(successMessage)}
       />
     </>
   );

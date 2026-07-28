@@ -63,7 +63,7 @@ export function SortControls<T extends string>({
   return (
     <div className="relative" ref={containerRef}>
       <button
-        className="inline-flex h-10 items-center gap-2 rounded-full bg-gray-100 px-5 text-base font-normal text-black transition hover:bg-gray-200"
+        className="inline-flex h-9 items-center gap-2 rounded-full bg-gray-100 px-4 text-sm font-normal text-black transition hover:bg-gray-200 md:h-10 md:px-5 md:text-base"
         onClick={() => setOpen((currentOpen) => !currentOpen)}
         type="button"
       >

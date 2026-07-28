@@ -1,18 +1,19 @@
-import { X } from "lucide-react";
+﻿import { X } from "lucide-react";
 
 export function FormModalShell({
   title,
   onClose,
-  children
+  children,
+  closeable = true
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  closeable?: boolean;
 }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-4 py-8"
-      onClick={onClose}
       role="presentation"
     >
       <div
@@ -23,14 +24,16 @@ export function FormModalShell({
       >
         <div className="mb-8 flex items-start justify-between gap-4">
           <h2 className="text-3xl font-medium text-black">{title}</h2>
-          <button
-            aria-label="ปิด"
-            className="rounded-full p-1 text-black transition hover:bg-gray-100"
-            onClick={onClose}
-            type="button"
-          >
-            <X className="h-8 w-8" strokeWidth={2.2} />
-          </button>
+          {closeable ? (
+            <button
+              aria-label="ปิด"
+              className="rounded-full p-1 text-black transition hover:bg-gray-100"
+              onClick={onClose}
+              type="button"
+            >
+              <X className="h-8 w-8" strokeWidth={2.2} />
+            </button>
+          ) : null}
         </div>
 
         {children}
@@ -38,3 +41,4 @@ export function FormModalShell({
     </div>
   );
 }
+

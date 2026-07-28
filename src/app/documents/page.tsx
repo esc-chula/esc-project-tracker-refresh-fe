@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { DocumentsPageContent } from "@/components/documents-page-content";
-import { getCurrentUser, getDocumentsByProject, getProjects } from "@/lib/api";
+import { getAPIBaseURL, getCurrentUser, getDocumentsByProject, getGoogleLoginURL, getProjects } from "@/lib/api";
 import type { DocumentExplorerRow } from "@/lib/document-view";
 
 export default async function DocumentsPage() {
@@ -11,7 +11,7 @@ export default async function DocumentsPage() {
   const currentUser = await getCurrentUser(cookieHeader);
 
   if (!currentUser) {
-    redirect("/");
+    redirect(getGoogleLoginURL());
   }
 
   const projects = await getProjects(cookieHeader);
@@ -30,9 +30,9 @@ export default async function DocumentsPage() {
   const documents = documentGroups.flat();
 
   return (
-    <AppShell currentUser={currentUser}>
+    <AppShell currentUser={currentUser} navItems={[{ label: "เอกสาร" }]}>
       <DocumentsPageContent
-        apiBaseURL={process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"}
+        apiBaseURL={getAPIBaseURL()}
         currentUser={currentUser}
         documents={documents}
         projects={projects}

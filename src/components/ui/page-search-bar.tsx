@@ -36,6 +36,7 @@ export function PageSearchBar({
   readOnly = false,
   searchScope,
   className,
+  searchItems = [],
   recentItems = [],
   emptyRecentText = "ยังไม่มีรายการล่าสุด"
 }: {
@@ -45,6 +46,7 @@ export function PageSearchBar({
   readOnly?: boolean;
   searchScope: SearchScope;
   className?: string;
+  searchItems?: RecentItem[];
   recentItems?: RecentItem[];
   emptyRecentText?: string;
 }) {
@@ -57,6 +59,13 @@ export function PageSearchBar({
     () => recentItems.filter((item) => matchesScope(item, searchScope) && matchesQuery(item, query)),
     [query, recentItems, searchScope]
   );
+
+  const visibleSearchItems = useMemo(
+    () => searchItems.filter((item) => matchesScope(item, searchScope) && matchesQuery(item, query)),
+    [query, searchItems, searchScope]
+  );
+
+  const visibleItems = showRecentHeading ? visibleRecentItems : visibleSearchItems;
 
   return (
     <div className={cn("relative", className)} data-search-scope={searchScope}>
@@ -87,9 +96,9 @@ export function PageSearchBar({
             </div>
           ) : null}
 
-          {visibleRecentItems.length > 0 ? (
+          {visibleItems.length > 0 ? (
             <div className="py-2">
-              {visibleRecentItems.map((item) => (
+              {visibleItems.map((item) => (
                 <Link
                   className="flex items-center gap-3 px-5 py-3 transition hover:bg-gray-50"
                   href={item.href}
