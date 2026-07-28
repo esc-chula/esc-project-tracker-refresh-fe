@@ -1,28 +1,36 @@
-# ESC Project Tracker Refresh Frontend
+# ESC Project Tracker Frontend
 
-Next.js frontend for the ESC Project Tracker revamp.
+## Overview
+ESC Project Tracker (`tracker.intania.org`) is a project and document management system for coordination between the ESC secretariat and project owners under the Engineering Student Committee.
 
-## Direction
+This repository contains the frontend application for browsing projects, managing documents, tracking filing activity, and using the ESC workflow through a web interface.
 
-- Separate frontend repo for the polyrepo revamp.
-- Consume the Go backend through REST/OpenAPI.
-- Use Google Auth entry points exposed by the backend.
-- Keep app-owned HTTP-only cookies for `accessToken` and `refreshToken`.
-- Use new terminology: `Project -> Document -> Filing`.
-
-## First Milestone
-
-Authenticated Project Skeleton:
-
-1. User clicks Google login.
-2. Backend handles Google auth and app session cookies.
-3. Frontend calls `/auth/me`.
-4. User can create and list projects.
-
-## Local Development
+## How to Run
+1. Create a local environment file.
 
 ```powershell
 Copy-Item .env.example .env.local
+```
+
+2. Set the backend API base URL in `.env.local`.
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+```
+
+3. Install dependencies and start the development server.
+
+```powershell
 bun install
 bun run dev
 ```
+
+4. Open the app in your browser.
+
+```text
+http://localhost:3000
+```
+
+Note:
+- The backend must be running before using the frontend locally.
+- In production, `NEXT_PUBLIC_API_BASE_URL` must point to the deployed backend origin.
