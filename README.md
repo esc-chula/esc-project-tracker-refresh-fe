@@ -33,4 +33,4 @@ http://localhost:3000
 
 Note:
 - The backend must be running before using the frontend locally.
-- In production, `NEXT_PUBLIC_API_BASE_URL` must point to the deployed backend origin.
+- In production, `NEXT_PUBLIC_API_BASE_URL` must point to the deployed backend origin. 
