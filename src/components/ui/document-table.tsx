@@ -25,6 +25,7 @@ import {
 type DocumentTableProps = {
   documents: DocumentExplorerRow[];
   emptyText: string;
+  isLoading?: boolean;
 };
 
 const documentColumnWidths = ["10%", "17.5%", "17.5%", "15%", "15%", "7.5%", "12.5%"] as const;
@@ -42,7 +43,8 @@ function maskPhone(phone?: string) {
 
 export function DocumentTable({
   documents,
-  emptyText
+  emptyText,
+  isLoading = false
 }: DocumentTableProps) {
   const router = useRouter();
   const [visiblePhoneRows, setVisiblePhoneRows] = useState<Record<string, boolean>>({});
@@ -64,7 +66,15 @@ export function DocumentTable({
         <DataTableHeaderCell>อัปเดตล่าสุด</DataTableHeaderCell>
       </DataTableHead>
       <DataTableBody>
-        {documents.length > 0 ? (
+        {isLoading ? (
+          <DataTableRow>
+            <DataTableCell className="py-16" colSpan={7}>
+              <div className="flex items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-500" />
+              </div>
+            </DataTableCell>
+          </DataTableRow>
+        ) : documents.length > 0 ? (
           documents.map((document) => (
             <DataTableRow
               className="cursor-pointer transition hover:bg-gray-50/80"

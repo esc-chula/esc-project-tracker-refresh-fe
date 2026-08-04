@@ -1,10 +1,12 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { DocumentProcessLink } from "@/components/ui/document-process-link";
 import { DocumentTable } from "@/components/ui/document-table";
 import { MultiFilterDropdown } from "@/components/ui/multi-filter-dropdown";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSearchBar, type SearchScope } from "@/components/ui/page-search-bar";
 import { PageToolbar } from "@/components/ui/page-toolbar";
 import { SortControls, type SortDirection, type SortOption } from "@/components/ui/sort-controls";
@@ -32,6 +34,7 @@ function getDocumentSortValue(document: DocumentExplorerRow, sortBy: DocumentSor
 }
 
 export function DocumentsExplorer({
+  isLoading = false,
   documents,
   searchScope,
   searchPlaceholder,
@@ -40,9 +43,12 @@ export function DocumentsExplorer({
   createButtonLabel,
   onCreateClick,
   afterFiltersContent,
+  leadingAction,
   hideProjectTypeFilter = false,
-  recentItems = []
+  recentItems = [],
+  pageSizeOptions
 }: {
+  isLoading?: boolean;
   documents: DocumentExplorerRow[];
   searchScope: SearchScope;
   searchPlaceholder: string;
@@ -51,8 +57,10 @@ export function DocumentsExplorer({
   createButtonLabel?: string;
   onCreateClick?: () => void;
   afterFiltersContent?: React.ReactNode;
+  leadingAction?: React.ReactNode;
   hideProjectTypeFilter?: boolean;
   recentItems?: RecentItem[];
+  pageSizeOptions?: readonly number[];
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
@@ -60,6 +68,14 @@ export function DocumentsExplorer({
   const [selectedDocumentStatuses, setSelectedDocumentStatuses] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<DocumentSortBy>("updatedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(pageSizeOptions?.[0] ?? 0);
+
+  useEffect(() => {
+    if (pageSizeOptions?.length) {
+      setPageSize(pageSizeOptions[0]);
+    }
+  }, [pageSizeOptions]);
 
   const filteredDocuments = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -116,15 +132,33 @@ export function DocumentsExplorer({
     sortDirection
   ]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [hideProjectTypeFilter, pageSize, searchQuery, selectedDepartments, selectedDocumentStatuses, selectedDocumentTypes, sortBy, sortDirection]);
+
+  const paginatedDocuments = useMemo(() => {
+    if (!pageSizeOptions?.length || pageSize <= 0) {
+      return filteredDocuments;
+    }
+
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredDocuments.slice(startIndex, startIndex + pageSize);
+  }, [currentPage, filteredDocuments, pageSize, pageSizeOptions]);
+
   return (
     <div className="space-y-8">
       <PageToolbar
         action={
-          onCreateClick ? (
-            <Button onClick={onCreateClick} type="button" variant="appRed">
-              <Plus className="h-5 w-5" strokeWidth={2.5} />
-              {createButtonLabel}
-            </Button>
+          onCreateClick || leadingAction ? (
+            <div className="flex shrink-0 items-center gap-3">
+              {leadingAction ?? <DocumentProcessLink />}
+              {onCreateClick ? (
+                <Button onClick={onCreateClick} type="button" variant="appRed">
+                  <Plus className="h-5 w-5" strokeWidth={2.5} />
+                  {createButtonLabel}
+                </Button>
+              ) : null}
+            </div>
           ) : undefined
         }
         controls={
@@ -179,10 +213,23 @@ export function DocumentsExplorer({
 
       {afterFiltersContent ? <div>{afterFiltersContent}</div> : null}
 
-      <DocumentTable
-        documents={filteredDocuments}
-        emptyText={emptyText}
-      />
+      <div className="space-y-5">
+        <DocumentTable
+          documents={paginatedDocuments}
+          emptyText={emptyText}
+          isLoading={isLoading}
+        />
+        {pageSizeOptions?.length && filteredDocuments.length > 0 && !isLoading ? (
+          <PaginationControls
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            pageSize={pageSize}
+            pageSizeOptions={pageSizeOptions}
+            totalItems={filteredDocuments.length}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }

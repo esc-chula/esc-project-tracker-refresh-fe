@@ -54,18 +54,7 @@ export async function middleware(request: NextRequest) {
     return (await refreshSession(request)) ?? redirectToLogin();
   }
 
-  const response = await fetch(`${authBaseURL}/me`, {
-    cache: "no-store",
-    headers: {
-      Cookie: cookieHeader
-    }
-  }).catch(() => null);
-
-  if (response?.ok) {
-    return NextResponse.next();
-  }
-
-  return (await refreshSession(request)) ?? redirectToLogin();
+  return NextResponse.next();
 }
 
 export const config = {

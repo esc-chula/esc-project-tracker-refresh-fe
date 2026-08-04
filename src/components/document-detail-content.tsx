@@ -36,13 +36,13 @@ type StepCard = {
 const STEP_CARDS: StepCard[] = [
   { number: 1, title: "ขอเลขรัน" },
   { number: 2, title: "ส่งให้ฝ่ายเลขานุการ\nตรวจสอบ" },
-  { number: 3, title: "หัวหน้านิสิต &\nรองหัวหน้านิสิต\nลงลายเซ็น" },
+  { number: 3, title: "กวศ.\nลงลายเซ็น" },
   { number: 4, title: "ส่งเอกสาร\nให้กิจการนิสิต" },
   { number: 5, title: "เอกสารได้รับ\nการอนุมัติ" }
 ];
 
 const DOCUMENT_FORMS_URL =
-  "https://drive.google.com/drive/folders/1gGlGOrF3il1geaFgNT79kPgWeU3cQGEh?usp=drive_link";
+  "https://drive.google.com/drive/folders/1JX2siBJUvARG_TogziD2Rbej93yV6ont?usp=drive_link";
 
 function formatTimelineDateLabel(value: string) {
   const target = new Date(value);
@@ -207,6 +207,22 @@ export function DocumentDetailContent({
       href: `/project/${encodeURIComponent(documentCode)}`
     });
   }, [document.id, documentCode, documentTitle, project.projectCode]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getFilingsByDocumentClient(document.id, { apiBaseURL }).then((refreshedFilings) => {
+      if (cancelled || refreshedFilings.error) {
+        return;
+      }
+
+      setLiveFilings(refreshedFilings.filings);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBaseURL, document.id]);
 
   const groupedFilings = useMemo(() => {
     const sorted = [runningNumberFiling, ...liveFilings].sort(

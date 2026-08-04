@@ -1,17 +1,41 @@
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { AppShell } from "@/components/app-shell";
+import { AppContentSection } from "@/components/app-shell";
 import { DocumentDetailContent } from "@/components/document-detail-content";
 import { ProjectDetailContent } from "@/components/project-detail-content";
 import {
   getAPIBaseURL,
   getCurrentUser,
-  getDocumentById,
-  getDocumentsByProject,
-  getFilingsByDocument,
+  getDocumentByCode,
   getGoogleLoginURL,
   getProjects
 } from "@/lib/api";
+
+function normalizeSlug(slug: string[]) {
+  if (slug.length === 2) {
+    const redirectedSlug = slug[1];
+
+    if (!redirectedSlug) {
+      return {
+        invalid: true
+      } as const;
+    }
+
+    return {
+      redirectTo: `/project/${encodeURIComponent(decodeURIComponent(redirectedSlug))}`
+    } as const;
+  }
+
+  if (slug.length !== 1) {
+    return {
+      invalid: true
+    } as const;
+  }
+
+  return {
+    decodedSlug: decodeURIComponent(slug[0])
+  } as const;
+}
 
 export default async function ProjectPage({
   params
@@ -19,84 +43,63 @@ export default async function ProjectPage({
   params: Promise<{ slug: string[] }>;
 }) {
   const { slug } = await params;
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
-  const currentUser = await getCurrentUser(cookieHeader);
+  const normalizedSlug = normalizeSlug(slug);
 
-  if (!currentUser) {
-    redirect(getGoogleLoginURL());
+  if ("redirectTo" in normalizedSlug && normalizedSlug.redirectTo) {
+    redirect(normalizedSlug.redirectTo);
   }
 
-  const apiBaseURL = getAPIBaseURL();
-  const projects = await getProjects(cookieHeader);
-
-  if (slug.length === 2) {
-    redirect(`/project/${encodeURIComponent(decodeURIComponent(slug[1]))}`);
-  }
-
-  if (slug.length !== 1) {
+  if ("invalid" in normalizedSlug) {
     notFound();
   }
 
-  const decodedSlug = decodeURIComponent(slug[0]);
+  const decodedSlug = normalizedSlug.decodedSlug;
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+  const apiBaseURL = getAPIBaseURL();
 
   if (decodedSlug.includes("-")) {
-    let matchedDocumentId = "";
-    let canonicalDocumentCode = "";
+    const [currentUser, resolvedDocument] = await Promise.all([
+      getCurrentUser(cookieHeader),
+      getDocumentByCode(cookieHeader, decodedSlug)
+    ]);
 
-    for (const project of projects) {
-      const documents = await getDocumentsByProject(cookieHeader, project.id);
-      const matchedDocument = documents.find((candidate) => {
-        const fullDocumentCode = `${candidate.projectCode}-${candidate.documentCode}`;
-        return fullDocumentCode === decodedSlug || candidate.documentCode === decodedSlug || candidate.id === decodedSlug;
-      });
-
-      if (matchedDocument) {
-        matchedDocumentId = matchedDocument.id;
-        canonicalDocumentCode = `${matchedDocument.projectCode}-${matchedDocument.documentCode}`;
-        break;
-      }
+    if (!currentUser) {
+      redirect(getGoogleLoginURL());
     }
 
-    if (!matchedDocumentId) {
+    if (!resolvedDocument) {
       notFound();
     }
+
+    const canonicalDocumentCode = `${resolvedDocument.projectCode}-${resolvedDocument.documentCode}`;
 
     if (decodedSlug !== canonicalDocumentCode) {
       redirect(`/project/${encodeURIComponent(canonicalDocumentCode)}`);
     }
 
-    const resolvedDocument = await getDocumentById(cookieHeader, matchedDocumentId);
-    if (!resolvedDocument) {
-      notFound();
-    }
-
-    const filingFeed = await getFilingsByDocument(cookieHeader, resolvedDocument.id);
-
     return (
-      <AppShell
-        contentClassName="overflow-visible rounded-none bg-transparent p-0 md:p-0 xl:p-0"
-        currentUser={currentUser}
-        navItems={[
-          { href: "/projects", label: "โครงการ" },
-          {
-            href: `/project/${encodeURIComponent(resolvedDocument.project.projectCode)}`,
-            label: resolvedDocument.project.projectCode
-          },
-          { label: canonicalDocumentCode }
-        ]}
-      >
+      <AppContentSection className="overflow-visible rounded-none bg-transparent p-0 md:p-0 xl:p-0">
         <DocumentDetailContent
           apiBaseURL={apiBaseURL}
           currentUserName={currentUser.displayName}
           currentUserRole={currentUser.role}
           document={resolvedDocument}
-          initialFilings={filingFeed.filings}
-          initialTimeline={filingFeed.timeline}
+          initialFilings={[]}
+          initialTimeline={[]}
           project={resolvedDocument.project}
         />
-      </AppShell>
+      </AppContentSection>
     );
+  }
+
+  const [currentUser, projects] = await Promise.all([
+    getCurrentUser(cookieHeader),
+    getProjects(cookieHeader)
+  ]);
+
+  if (!currentUser) {
+    redirect(getGoogleLoginURL());
   }
 
   const project =
@@ -107,22 +110,14 @@ export default async function ProjectPage({
     notFound();
   }
 
-  const documents = await getDocumentsByProject(cookieHeader, project.id);
-
   return (
-    <AppShell
-      currentUser={currentUser}
-      navItems={[
-        { href: "/projects", label: "โครงการ" },
-        { label: project.projectCode }
-      ]}
-    >
+    <AppContentSection>
       <ProjectDetailContent
         apiBaseURL={apiBaseURL}
         currentUser={currentUser}
-        initialDocuments={documents}
+        initialDocuments={[]}
         initialProject={project}
       />
-    </AppShell>
+    </AppContentSection>
   );
 }

@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CurrentUser, Document, Project } from "@/lib/api";
-import { deleteProject } from "@/lib/api";
+import { deleteProject, getDocumentsByProjectClient } from "@/lib/api";
 import { ConfirmDeleteModal } from "@/components/confirm-delete-modal";
 import { DocumentsExplorer } from "@/components/documents-explorer";
 import { NewDocumentModal } from "@/components/new-document-modal";
 import { NewProjectModal } from "@/components/new-project-modal";
 import { ActionSuccessPopup } from "@/components/ui/action-success-popup";
-import { SelectedActionBar } from "@/components/ui/selected-action-bar";
 import { ProjectIcon } from "@/components/ui/document-action-icons";
+import { SelectedActionBar } from "@/components/ui/selected-action-bar";
 import type { DocumentExplorerRow } from "@/lib/document-view";
 import { getRecentItems, saveRecentItem, type RecentItem } from "@/lib/recent-items";
 import { buildGlobalSearchItems } from "@/lib/search-items";
@@ -29,6 +29,7 @@ export function ProjectDetailContent({
   const router = useRouter();
   const [project, setProject] = useState(initialProject);
   const [documents, setDocuments] = useState(initialDocuments);
+  const [isDocumentsLoading, setIsDocumentsLoading] = useState(initialDocuments.length === 0);
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
   const [isProjectEditOpen, setIsProjectEditOpen] = useState(false);
   const [isProjectDeleteOpen, setIsProjectDeleteOpen] = useState(false);
@@ -45,6 +46,27 @@ export function ProjectDetailContent({
       href: `/project/${encodeURIComponent(project.projectCode || project.id)}`
     });
   }, [project.id, project.name, project.projectCode]);
+
+  useEffect(() => {
+    if (initialDocuments.length > 0) {
+      setDocuments(initialDocuments);
+      setIsDocumentsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    void getDocumentsByProjectClient(project.id, { apiBaseURL }).then((nextDocuments) => {
+      if (!cancelled) {
+        setDocuments(nextDocuments);
+        setIsDocumentsLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [apiBaseURL, initialDocuments, project.id]);
 
   const documentRows = useMemo<DocumentExplorerRow[]>(
     () =>
@@ -79,7 +101,9 @@ export function ProjectDetailContent({
         documents={documentRows}
         emptyText="ไม่พบเอกสาร"
         hideProjectTypeFilter
+        isLoading={isDocumentsLoading}
         onCreateClick={() => setIsDocumentModalOpen(true)}
+        pageSizeOptions={[10, 20, 50]}
         recentItems={recentItems}
         searchItems={searchItems}
         searchPlaceholder="ค้นหาโครงการหรือเอกสาร"

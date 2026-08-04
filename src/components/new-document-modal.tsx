@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
 import { Plus } from "lucide-react";
-import type { Document, Project } from "@/lib/api";
-import { createDocument, getAPIErrorMessage, previewNextDocumentCode, splitDocumentTypeOption, updateDocument } from "@/lib/api";
-import { documentTypeOptions } from "@/lib/catalog";
+import { useEffect, useEffectEvent, useMemo, useRef, useState, useTransition } from "react";
 import { FormInput, FormSelect } from "@/components/ui/form-fields";
 import { FormModalActions } from "@/components/ui/form-modal-actions";
 import { FormModalShell } from "@/components/ui/form-modal-shell";
+import type { Document, Project } from "@/lib/api";
+import { createDocument, getAPIErrorMessage, previewNextDocumentCode, splitDocumentTypeOption, updateDocument } from "@/lib/api";
+import { documentTypeOptions } from "@/lib/catalog";
+import { departmentOptions } from "@/lib/document-view";
 
 type NewDocumentModalProps = {
   apiBaseURL: string;
@@ -28,6 +29,7 @@ type DocumentFormState = {
   isPreviewLoading: boolean;
   name: string;
   selectedProjectId: string;
+  selectedProjectType: string;
   typeValue: string;
 };
 
@@ -43,8 +45,13 @@ function buildInitialDocumentState(input: {
     isPreviewLoading: false,
     name: document?.name ?? "",
     selectedProjectId: document?.projectId ?? projectId ?? "",
+    selectedProjectType: "",
     typeValue: document ? (document.subType ? `${document.type}-${document.subType}` : document.type) : ""
   };
+}
+
+function isExternalDocumentType(typeValue: string) {
+  return splitDocumentTypeOption(typeValue).type === "9";
 }
 
 export function NewDocumentModal(props: NewDocumentModalProps) {
@@ -72,12 +79,21 @@ function DocumentModalForm({
   const [isPending, startTransition] = useTransition();
   const previewRequestIDRef = useRef(0);
   const isEditing = Boolean(document);
+  const isProjectScoped = Boolean(projectId);
+  const externalTypeSelected = isExternalDocumentType(formState.typeValue);
+  const availableDocumentTypeOptions = useMemo(
+    () => (isProjectScoped ? documentTypeOptions.filter((option) => splitDocumentTypeOption(option.value).type !== "9") : documentTypeOptions),
+    [isProjectScoped]
+  );
 
   const selectedProject =
     projects.find((item) => item.id === formState.selectedProjectId) ??
-    (projectId ? { id: projectId, projectCode: projectCode ?? "" } : null);
+    (projectId ? { id: projectId, projectCode: projectCode ?? "", name: "", type: "" } : null);
 
-  const previewCode = formState.documentCode && selectedProject?.projectCode ? `${selectedProject.projectCode}-${formState.documentCode}` : "";
+  const previewProjectCode = externalTypeSelected
+    ? (formState.selectedProjectType ? `${formState.selectedProjectType}00` : "")
+    : (selectedProject?.projectCode ?? "");
+  const previewCode = formState.documentCode && previewProjectCode ? `${previewProjectCode}-${formState.documentCode}` : "";
 
   function handleClose() {
     previewRequestIDRef.current += 1;
@@ -89,19 +105,20 @@ function DocumentModalForm({
     handleClose();
   });
 
-  async function previewDocumentCode(nextTypeValue: string, nextProjectId: string) {
+  async function previewDocumentCode(nextTypeValue: string, nextProjectId: string, nextProjectType: string) {
     previewRequestIDRef.current += 1;
     const requestID = previewRequestIDRef.current;
     const { type } = splitDocumentTypeOption(nextTypeValue);
+    const requiresSelection = type === "9" ? Boolean(nextProjectType) : Boolean(nextProjectId);
 
     setFormState((current) => ({
       ...current,
       documentCode: "",
       errorMessage: "",
-      isPreviewLoading: Boolean(type && nextProjectId)
+      isPreviewLoading: Boolean(type && requiresSelection)
     }));
 
-    if (!type || !nextProjectId) {
+    if (!type || !requiresSelection) {
       return;
     }
 
@@ -130,11 +147,20 @@ function DocumentModalForm({
   }
 
   async function handleTypeChange(nextTypeValue: string) {
+    const nextIsExternal = isExternalDocumentType(nextTypeValue);
+
     setFormState((current) => ({
       ...current,
-      typeValue: nextTypeValue
+      typeValue: nextTypeValue,
+      selectedProjectId: nextIsExternal ? "" : current.selectedProjectId,
+      selectedProjectType: nextIsExternal ? current.selectedProjectType : ""
     }));
-    await previewDocumentCode(nextTypeValue, formState.selectedProjectId);
+
+    await previewDocumentCode(
+      nextTypeValue,
+      nextIsExternal ? "" : formState.selectedProjectId,
+      nextIsExternal ? formState.selectedProjectType : ""
+    );
   }
 
   async function handleProjectChange(nextProjectId: string) {
@@ -142,7 +168,15 @@ function DocumentModalForm({
       ...current,
       selectedProjectId: nextProjectId
     }));
-    await previewDocumentCode(formState.typeValue, nextProjectId);
+    await previewDocumentCode(formState.typeValue, nextProjectId, formState.selectedProjectType);
+  }
+
+  async function handleProjectTypeChange(nextProjectType: string) {
+    setFormState((current) => ({
+      ...current,
+      selectedProjectType: nextProjectType
+    }));
+    await previewDocumentCode(formState.typeValue, "", nextProjectType);
   }
 
   useEffect(() => {
@@ -154,15 +188,18 @@ function DocumentModalForm({
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, []);
+  }, [handleCloseEvent]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!formState.selectedProjectId || !formState.name.trim() || !formState.typeValue) {
+    const hasSelection = externalTypeSelected ? Boolean(formState.selectedProjectType) : Boolean(formState.selectedProjectId);
+    if (!hasSelection || !formState.name.trim() || !formState.typeValue) {
       setFormState((current) => ({
         ...current,
-        errorMessage: "กรุณาเลือกโครงการ กรอกชื่อเอกสาร และเลือกประเภทเอกสาร"
+        errorMessage: externalTypeSelected
+          ? "กรุณาเลือกประเภทโครงการ กรอกชื่อเอกสาร และเลือกประเภทเอกสาร"
+          : "กรุณาเลือกโครงการ กรอกชื่อเอกสาร และเลือกประเภทเอกสาร"
       }));
       return;
     }
@@ -200,7 +237,8 @@ function DocumentModalForm({
 
         const result = await createDocument({
           apiBaseURL,
-          projectId: formState.selectedProjectId,
+          projectId: externalTypeSelected ? undefined : formState.selectedProjectId,
+          projectType: externalTypeSelected ? formState.selectedProjectType : undefined,
           name: formState.name.trim(),
           type,
           subType: subType || undefined
@@ -232,10 +270,44 @@ function DocumentModalForm({
       <form className="space-y-5" onSubmit={handleSubmit}>
         <label className="block space-y-2">
           <span className="text-m font-medium text-black">รหัสเอกสาร</span>
-          <FormInput disabled placeholder={formState.isPreviewLoading ? "กำลังโหลดรหัสเอกสาร..." : "XXXX-XXXX"} value={previewCode} />
+          <FormInput
+            disabled
+            placeholder={formState.isPreviewLoading ? "กำลังโหลดรหัสเอกสาร..." : "XXXX-XXXX"}
+            value={previewCode}
+          />
         </label>
 
-        {projects.length > 0 && !isEditing ? (
+        <label className="block space-y-2">
+          <span className="text-m font-medium text-black">
+            ประเภทเอกสาร <span className="text-red-600">*</span>
+          </span>
+          <FormSelect
+            onValueChange={(nextValue) => {
+              void handleTypeChange(nextValue);
+            }}
+            options={availableDocumentTypeOptions}
+            placeholder="เลือกประเภทเอกสาร"
+            value={formState.typeValue}
+          />
+        </label>
+
+        {!isEditing && externalTypeSelected ? (
+          <label className="block space-y-2">
+            <span className="text-m font-medium text-black">
+              ประเภทโครงการ <span className="text-red-600">*</span>
+            </span>
+            <FormSelect
+              onValueChange={(nextValue) => {
+                void handleProjectTypeChange(nextValue);
+              }}
+              options={departmentOptions}
+              placeholder="เลือกประเภทโครงการ"
+              value={formState.selectedProjectType}
+            />
+          </label>
+        ) : null}
+
+        {projects.length > 0 && !isEditing && !externalTypeSelected ? (
           <label className="block space-y-2">
             <span className="text-m font-medium text-black">
               โครงการ <span className="text-red-600">*</span>
@@ -254,20 +326,6 @@ function DocumentModalForm({
             />
           </label>
         ) : null}
-
-        <label className="block space-y-2">
-          <span className="text-m font-medium text-black">
-            ประเภทเอกสาร <span className="text-red-600">*</span>
-          </span>
-          <FormSelect
-            onValueChange={(nextValue) => {
-              void handleTypeChange(nextValue);
-            }}
-            options={documentTypeOptions}
-            placeholder="เลือกประเภทเอกสาร"
-            value={formState.typeValue}
-          />
-        </label>
 
         <label className="block space-y-2">
           <span className="text-m font-medium text-black">

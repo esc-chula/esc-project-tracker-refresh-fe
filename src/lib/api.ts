@@ -188,6 +188,25 @@ export async function getCurrentUser(cookieHeader: string): Promise<CurrentUser 
   }
 }
 
+export async function getCurrentUserClient(input?: {
+  apiBaseURL?: string;
+}): Promise<CurrentUser | null> {
+  try {
+    const response = await fetchWithSessionRetry(`${input?.apiBaseURL ?? apiBaseURL}/api/v1/auth/me`, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as { user?: CurrentUser };
+    return payload.user ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function updateCurrentUserProfile(input: {
   displayName: string;
   phone: string;
@@ -226,6 +245,23 @@ export async function getProjects(cookieHeader: string): Promise<Project[]> {
       headers: {
         Cookie: cookieHeader
       }
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as { projects?: Project[] };
+    return payload.projects ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getProjectsClient(input?: { apiBaseURL?: string }): Promise<Project[]> {
+  try {
+    const response = await fetchWithSessionRetry(`${input?.apiBaseURL ?? apiBaseURL}/api/v1/projects`, {
+      cache: "no-store"
     });
 
     if (!response.ok) {
@@ -287,6 +323,71 @@ export async function getDocumentsByProject(cookieHeader: string, projectId: str
   }
 }
 
+export async function getDocumentsByProjectClient(
+  projectId: string,
+  input?: { apiBaseURL?: string }
+): Promise<Document[]> {
+  if (!projectId) {
+    return [];
+  }
+
+  try {
+    const response = await fetchWithSessionRetry(`${input?.apiBaseURL ?? apiBaseURL}/api/v1/projects/${projectId}/documents`, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as { documents?: Document[] };
+    return payload.documents ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getDocuments(cookieHeader: string): Promise<Document[]> {
+  if (!cookieHeader) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(`${apiBaseURL}/api/v1/documents`, {
+      cache: "no-store",
+      headers: {
+        Cookie: cookieHeader
+      }
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as { documents?: Document[] };
+    return payload.documents ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getDocumentsClient(input?: { apiBaseURL?: string }): Promise<Document[]> {
+  try {
+    const response = await fetchWithSessionRetry(`${input?.apiBaseURL ?? apiBaseURL}/api/v1/documents`, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as { documents?: Document[] };
+    return payload.documents ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function getDocumentById(cookieHeader: string, documentId: string): Promise<DocumentDetail | null> {
   if (!cookieHeader || !documentId) {
     return null;
@@ -294,6 +395,30 @@ export async function getDocumentById(cookieHeader: string, documentId: string):
 
   try {
     const response = await fetch(`${apiBaseURL}/api/v1/documents/${documentId}`, {
+      cache: "no-store",
+      headers: {
+        Cookie: cookieHeader
+      }
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as { document?: DocumentDetail };
+    return payload.document ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getDocumentByCode(cookieHeader: string, code: string): Promise<DocumentDetail | null> {
+  if (!cookieHeader || !code) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${apiBaseURL}/api/v1/document-codes/${encodeURIComponent(code)}`, {
       cache: "no-store",
       headers: {
         Cookie: cookieHeader
@@ -505,19 +630,25 @@ export async function deleteProject(input: { apiBaseURL?: string; id: string }):
 
 export async function createDocument(input: {
   apiBaseURL?: string;
-  projectId: string;
+  projectId?: string;
+  projectType?: string;
   name: string;
   type: string;
   subType?: string;
 }): Promise<{ document?: Document; error?: string }> {
   try {
-    const response = await fetchWithSessionRetry(`${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/documents`, {
+    const isExternalDocument = input.type === "9";
+    const endpoint = isExternalDocument
+      ? `${input.apiBaseURL ?? apiBaseURL}/api/v1/documents`
+      : `${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/documents`;
+    const response = await fetchWithSessionRetry(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: input.name,
         type: input.type,
-        subType: input.subType
+        subType: input.subType,
+        projectType: input.projectType
       })
     });
 

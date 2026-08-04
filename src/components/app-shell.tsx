@@ -1,9 +1,13 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
-import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AppNavProfile } from "@/components/ui/app-nav-profile";
 import { ProfileCompletionModal } from "@/components/profile-completion-modal";
-import type { CurrentUser } from "@/lib/api";
+import { getCurrentUserClient, type CurrentUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export type AppNavItem = {
@@ -12,17 +16,29 @@ export type AppNavItem = {
   active?: boolean;
 };
 
-export function AppShell({
-  children,
-  contentClassName,
-  currentUser,
-  navItems
+export function AppChrome({
+  children
 }: {
-  currentUser: CurrentUser | null;
   children: React.ReactNode;
-  contentClassName?: string;
-  navItems?: AppNavItem[];
 }) {
+  const pathname = usePathname();
+  const navItems = buildNavItems(pathname);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getCurrentUserClient().then((user) => {
+      if (!cancelled) {
+        setCurrentUser(user);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <main className="app-canvas min-h-screen overflow-x-auto p-[var(--shell-padding)]">
       <div className="flex min-w-0 flex-col gap-[var(--shell-gap)] md:flex-row">
@@ -31,19 +47,69 @@ export function AppShell({
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-[var(--shell-gap)] md:max-h-[calc(100vh-(var(--shell-padding)*2))] md:overflow-y-auto">
           {navItems?.length ? <AppNav currentUser={currentUser} items={navItems} /> : null}
-          <section
-            className={cn(
-              "min-w-0 flex-1 overflow-x-auto rounded-[var(--content-radius)] bg-white px-4 pb-5 pt-4 sm:px-5 md:px-6 md:pb-7 md:pt-5 xl:px-9 xl:pb-10 xl:pt-6",
-              contentClassName
-            )}
-          >
-            {children}
-          </section>
+          {children}
         </div>
       </div>
       <ProfileCompletionModal currentUser={currentUser} />
     </main>
   );
+}
+
+export function AppContentSection({
+  children,
+  className
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={cn(
+        "min-w-0 flex-1 overflow-x-auto rounded-[var(--content-radius)] bg-white px-4 pb-5 pt-4 sm:px-5 md:px-6 md:pb-7 md:pt-5 xl:px-9 xl:pb-10 xl:pt-6",
+        className
+      )}
+    >
+      {children}
+    </section>
+  );
+}
+
+function buildNavItems(pathname: string): AppNavItem[] {
+  if (pathname === "/") {
+    return [{ label: "หน้าหลัก" }];
+  }
+
+  if (pathname === "/projects") {
+    return [{ label: "โครงการ" }];
+  }
+
+  if (pathname === "/documents") {
+    return [{ label: "เอกสาร" }];
+  }
+
+  if (pathname.startsWith("/project/")) {
+    const slug = decodeURIComponent(pathname.slice("/project/".length));
+
+    if (!slug) {
+      return [{ href: "/projects", label: "โครงการ" }];
+    }
+
+    if (slug.includes("-")) {
+      const [projectCode] = slug.split("-", 1);
+      return [
+        { href: "/projects", label: "โครงการ" },
+        { href: `/project/${encodeURIComponent(projectCode)}`, label: projectCode },
+        { label: slug }
+      ];
+    }
+
+    return [
+      { href: "/projects", label: "โครงการ" },
+      { label: slug }
+    ];
+  }
+
+  return [];
 }
 
 function AppNav({ currentUser, items }: { currentUser: CurrentUser | null; items: AppNavItem[] }) {

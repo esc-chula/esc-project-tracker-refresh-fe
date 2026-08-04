@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_Thai } from "next/font/google";
+import { AppChrome } from "@/components/app-shell";
 import "./globals.css";
 
 const ibmPlexSansThai = IBM_Plex_Sans_Thai({
@@ -24,7 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={ibmPlexSansThai.variable}>{children}</body>
+      <body className={ibmPlexSansThai.variable}>
+        <AppChrome>{children}</AppChrome>
+      </body>
     </html>
   );
 }
