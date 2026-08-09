@@ -83,7 +83,6 @@ export default async function ProjectPage({
         <DocumentDetailContent
           apiBaseURL={apiBaseURL}
           currentUserName={currentUser.displayName}
-          currentUserRole={currentUser.role}
           document={resolvedDocument}
           initialFilings={[]}
           initialTimeline={[]}

@@ -14,14 +14,13 @@ import { FilePreviewChip } from "@/components/ui/file-preview-chip";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { SelectedActionBar } from "@/components/ui/selected-action-bar";
 import type { DocumentDetail, DocumentProjectSummary, Filing, FilingTimelineEvent } from "@/lib/api";
-import { deleteDocument, getFilingsByDocumentClient } from "@/lib/api";
+import { deleteDocument, getDocumentByIdClient, getFilingsByDocumentClient } from "@/lib/api";
 import { getDocumentTypeLabel } from "@/lib/document-view";
 import { saveRecentItem } from "@/lib/recent-items";
 
 type DocumentDetailContentProps = {
   apiBaseURL: string;
   currentUserName: string;
-  currentUserRole: string;
   document: DocumentDetail;
   initialFilings: Filing[];
   initialTimeline: FilingTimelineEvent[];
@@ -70,32 +69,37 @@ function formatTimelineTimeLabel(value: string) {
   }).format(new Date(value));
 }
 
+const activityLabels: Record<string, string> = {
+  submitted: "ส่งเอกสาร",
+  returned: "ตีกลับ",
+  signed: "กวศ. ลงลายเซ็น",
+  forwarded: "ส่งให้กิจการนิสิตแล้ว",
+  approved: "อนุมัติ",
+  cancelled: "ยกเลิกเอกสาร"
+};
+
 function getActivityLabel(filing: Filing) {
   if (filing.status === "number_requested") {
     return "ขอเลขรัน";
   }
 
-  if (filing.status === "approved") {
-    return "อนุมัติ";
-  }
-
-  if (filing.status === "returned") {
-    return "ตีกลับ";
-  }
-
-  return "อัปโหลด";
+  return (filing.action && activityLabels[filing.action]) || "อัปโหลด";
 }
 
 function getActivityLabelClassName(filing: Filing) {
-  if (filing.status === "approved") {
-    return "text-emerald-500";
+  switch (filing.action) {
+    case "approved":
+      return "text-emerald-500";
+    case "returned":
+      return "text-red-700";
+    case "cancelled":
+      return "text-gray-500";
+    case "signed":
+    case "forwarded":
+      return "text-emerald-600";
+    default:
+      return "text-black";
   }
-
-  if (filing.status === "returned") {
-    return "text-red-700";
-  }
-
-  return "text-black";
 }
 
 function getActorLabel(filing: Filing, ownerDisplayName: string, currentUserName: string) {
@@ -103,10 +107,22 @@ function getActorLabel(filing: Filing, ownerDisplayName: string, currentUserName
 }
 
 function getCommentText(filing: Filing) {
-  return filing.approveMessage || filing.returnMessage || filing.replyMessage || filing.message || "";
+  return (
+    filing.approveMessage ||
+    filing.cancelMessage ||
+    filing.forwardMessage ||
+    filing.signMessage ||
+    filing.returnMessage ||
+    filing.replyMessage ||
+    filing.message ||
+    ""
+  );
 }
 
 function isAdminAction(filing: Filing) {
+  if (filing.action) {
+    return filing.action !== "submitted";
+  }
   return filing.status === "approved" || filing.status === "returned";
 }
 
@@ -146,8 +162,14 @@ function getStepStatuses(documentStatus: string) {
       return ["accepted", "warning", "disabled", "disabled", "disabled"];
     case "returned":
       return ["accepted", "error", "disabled", "disabled", "disabled"];
+    case "signed":
+      return ["accepted", "accepted", "accepted", "disabled", "disabled"];
+    case "forwarded":
+      return ["accepted", "accepted", "accepted", "accepted", "disabled"];
     case "approved":
       return ["accepted", "accepted", "accepted", "accepted", "accepted"];
+    case "cancelled":
+      return ["disabled", "disabled", "disabled", "disabled", "disabled"];
     default:
       return ["accepted", "disabled", "disabled", "disabled", "disabled"];
   }
@@ -170,7 +192,6 @@ function getStepLineClassName(leftStepStatus: string, rightStepStatus: string) {
 export function DocumentDetailContent({
   apiBaseURL,
   currentUserName,
-  currentUserRole,
   document,
   initialFilings,
   project
@@ -189,6 +210,10 @@ export function DocumentDetailContent({
   const stepStatuses = getStepStatuses(currentDocument.status);
   const ownerDisplayName = currentDocument.owner?.displayName || currentUserName;
   const runningNumberFiling = useMemo(() => buildRunningNumberFiling(currentDocument, project), [currentDocument, project]);
+  const permissions = currentDocument.permissions;
+  const allowedActions = permissions?.allowedWorkflowActions ?? [];
+  const canEdit = permissions?.canEdit ?? false;
+  const canDelete = permissions?.canDelete ?? false;
 
   const legacyStepVisuals = [
     <Step1 key="step-1" className="h-[94px] w-auto" fill={stepStatuses[0] ?? "disabled"} />,
@@ -290,6 +315,8 @@ export function DocumentDetailContent({
               <SelectedActionBar
                 deleteIcon={<DeleteIcon className="h-6 w-6" />}
                 editIcon={<EditIcon className="h-6 w-6" />}
+                hideDelete={!canDelete}
+                hideEdit={!canEdit}
                 icon={<DocumentIcon className="h-6 w-6" />}
                 onDelete={() => {
                   setDeleteErrorMessage("");
@@ -310,10 +337,12 @@ export function DocumentDetailContent({
                 <InfoIcon className="h-6 w-6" />
                 <span>ฟอร์มเอกสาร</span>
               </a>
-              <Button onClick={() => setIsUploadOpen(true)} type="button" variant="appRed">
-                <Upload className="h-5 w-5" strokeWidth={2.5} />
-                อัปโหลดไฟล์
-              </Button>
+              {allowedActions.length > 0 ? (
+                <Button onClick={() => setIsUploadOpen(true)} type="button" variant="appRed">
+                  <Upload className="h-5 w-5" strokeWidth={2.5} />
+                  อัปโหลดไฟล์
+                </Button>
+              ) : null}
             </div>
           </div>
 
@@ -392,13 +421,16 @@ export function DocumentDetailContent({
       />
 
       <FilingComposerModal
+        allowedActions={allowedActions}
         apiBaseURL={apiBaseURL}
-        documentStatus={currentDocument.status}
         documentId={currentDocument.id}
-        latestFilingId={liveFilings[0]?.id ?? currentDocument.latestFiling?.id}
         onClose={() => setIsUploadOpen(false)}
         onCreated={async (filing) => {
-          const refreshedFilings = await getFilingsByDocumentClient(currentDocument.id, { apiBaseURL });
+          const [refreshedFilings, refreshedDocument] = await Promise.all([
+            getFilingsByDocumentClient(currentDocument.id, { apiBaseURL }),
+            getDocumentByIdClient(currentDocument.id, { apiBaseURL })
+          ]);
+
           if (refreshedFilings.filings.length > 0 || refreshedFilings.timeline.length > 0) {
             setLiveFilings(refreshedFilings.filings);
           } else {
@@ -407,9 +439,15 @@ export function DocumentDetailContent({
               return [filing, ...nextFilings];
             });
           }
+
+          if (refreshedDocument) {
+            setCurrentDocument(refreshedDocument);
+            return;
+          }
+
           setCurrentDocument((current) => ({
             ...current,
-            status: filing.status === "submitted" || filing.status === "returned" || filing.status === "approved" ? filing.status : current.status,
+            status: filing.status,
             updatedAt: filing.updatedAt,
             latestFiling: {
               id: filing.id,
@@ -422,8 +460,6 @@ export function DocumentDetailContent({
         }}
         onSuccess={setSuccessMessage}
         open={isUploadOpen}
-        projectId={project.id}
-        role={currentUserRole}
       />
 
       <ActionSuccessPopup message={successMessage} onClose={() => setSuccessMessage("")} open={Boolean(successMessage)} />

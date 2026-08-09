@@ -6,9 +6,11 @@ import type { CurrentUser, Document, Project } from "@/lib/api";
 import { deleteProject, getDocumentsByProjectClient } from "@/lib/api";
 import { ConfirmDeleteModal } from "@/components/confirm-delete-modal";
 import { DocumentsExplorer } from "@/components/documents-explorer";
+import { ManageProjectMembersModal } from "@/components/manage-project-members-modal";
 import { NewDocumentModal } from "@/components/new-document-modal";
 import { NewProjectModal } from "@/components/new-project-modal";
 import { ActionSuccessPopup } from "@/components/ui/action-success-popup";
+import { Button } from "@/components/ui/button";
 import { ProjectIcon } from "@/components/ui/document-action-icons";
 import { SelectedActionBar } from "@/components/ui/selected-action-bar";
 import type { DocumentExplorerRow } from "@/lib/document-view";
@@ -33,9 +35,16 @@ export function ProjectDetailContent({
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
   const [isProjectEditOpen, setIsProjectEditOpen] = useState(false);
   const [isProjectDeleteOpen, setIsProjectDeleteOpen] = useState(false);
+  const [isManageMembersOpen, setIsManageMembersOpen] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [recentItems] = useState<RecentItem[]>(() => getRecentItems());
+
+  const permissions = project.permissions;
+  const canEdit = permissions?.canEdit ?? false;
+  const canDelete = permissions?.canDelete ?? false;
+  const canCreateDocument = permissions?.canCreateDocument ?? false;
+  const canManageMembers = permissions?.canManageMembers ?? false;
 
   useEffect(() => {
     saveRecentItem({
@@ -87,22 +96,31 @@ export function ProjectDetailContent({
     <>
       <DocumentsExplorer
         afterFiltersContent={
-          <SelectedActionBar
-            icon={<ProjectIcon className="h-6 w-6" />}
-            onDelete={() => {
-              setDeleteErrorMessage("");
-              setIsProjectDeleteOpen(true);
-            }}
-            onEdit={() => setIsProjectEditOpen(true)}
-            title={`${project.projectCode} ${project.name}`}
-          />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <SelectedActionBar
+              hideDelete={!canDelete}
+              hideEdit={!canEdit}
+              icon={<ProjectIcon className="h-6 w-6" />}
+              onDelete={() => {
+                setDeleteErrorMessage("");
+                setIsProjectDeleteOpen(true);
+              }}
+              onEdit={() => setIsProjectEditOpen(true)}
+              title={`${project.projectCode} ${project.name}`}
+            />
+            {canManageMembers ? (
+              <Button onClick={() => setIsManageMembersOpen(true)} type="button" variant="outline">
+                จัดการผู้เข้าถึง
+              </Button>
+            ) : null}
+          </div>
         }
         createButtonLabel="สร้างเอกสารใหม่"
         documents={documentRows}
         emptyText="ไม่พบเอกสาร"
         hideProjectTypeFilter
         isLoading={isDocumentsLoading}
-        onCreateClick={() => setIsDocumentModalOpen(true)}
+        onCreateClick={canCreateDocument ? () => setIsDocumentModalOpen(true) : undefined}
         pageSizeOptions={[10, 20, 50]}
         recentItems={recentItems}
         searchItems={searchItems}
@@ -146,6 +164,13 @@ export function ProjectDetailContent({
         }}
         open={isProjectDeleteOpen}
         title="ลบโครงการ"
+      />
+
+      <ManageProjectMembersModal
+        apiBaseURL={apiBaseURL}
+        onClose={() => setIsManageMembersOpen(false)}
+        open={isManageMembersOpen}
+        projectId={project.id}
       />
 
       <ActionSuccessPopup message={successMessage} onClose={() => setSuccessMessage("")} open={Boolean(successMessage)} />

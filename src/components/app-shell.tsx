@@ -96,6 +96,19 @@ function buildNavItems(pathname: string): AppNavItem[] {
 
     if (slug.includes("-")) {
       const [projectCode] = slug.split("-", 1);
+
+      // Type "9" (เอกสารนอกโครงการ) documents are filed under a
+      // placeholder project code (`{projectType}00`) rather than a real
+      // project — real project codes always start their sequence at 01,
+      // so a code ending in "00" never resolves to an actual project
+      // page. Skip that middle breadcrumb segment for those documents.
+      if (projectCode.endsWith("00")) {
+        return [
+          { href: "/projects", label: "โครงการ" },
+          { label: slug }
+        ];
+      }
+
       return [
         { href: "/projects", label: "โครงการ" },
         { href: `/project/${encodeURIComponent(projectCode)}`, label: projectCode },

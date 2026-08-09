@@ -46,9 +46,13 @@ export function getDocumentStatusClassName(status: string) {
     case "approved":
       return "text-emerald-500";
     case "submitted":
+    case "signed":
+    case "forwarded":
       return "text-yellow-500";
     case "returned":
       return "text-red-500";
+    case "cancelled":
+      return "text-gray-400";
     default:
       return "text-gray-400";
   }
@@ -62,8 +66,14 @@ export function getDocumentDisplayStatusLabel(status: string) {
       return "กำลังตรวจสอบ";
     case "returned":
       return "ตีกลับ";
+    case "signed":
+      return "รอส่งให้กิจการนิสิต";
+    case "forwarded":
+      return "ส่งให้กิจการนิสิตแล้ว";
     case "approved":
       return "อนุมัติ";
+    case "cancelled":
+      return "ยกเลิกเอกสาร";
   }
 }
 
@@ -72,9 +82,13 @@ export function getDocumentStatusBadgeClassName(status: string) {
     case "approved":
       return "bg-emerald-500 text-white";
     case "submitted":
+    case "signed":
+    case "forwarded":
       return "bg-yellow-500 text-white";
     case "returned":
       return "bg-red-500 text-white";
+    case "cancelled":
+      return "bg-gray-400 text-white";
   }
 }
 

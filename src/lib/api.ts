@@ -10,6 +10,13 @@ export type CurrentUser = {
   emailVerified: boolean;
 };
 
+export type ProjectPermissions = {
+  canEdit: boolean;
+  canDelete: boolean;
+  canCreateDocument: boolean;
+  canManageMembers: boolean;
+};
+
 export type Project = {
   id: string;
   ownerUserId: string;
@@ -19,6 +26,13 @@ export type Project = {
   status: string;
   createdAt: string;
   updatedAt: string;
+  permissions?: ProjectPermissions;
+};
+
+export type DocumentPermissions = {
+  canEdit: boolean;
+  canDelete: boolean;
+  allowedWorkflowActions: string[];
 };
 
 export type Document = {
@@ -38,6 +52,7 @@ export type Document = {
   status: string;
   createdAt: string;
   updatedAt: string;
+  permissions?: DocumentPermissions;
 };
 
 export type DocumentProjectSummary = {
@@ -79,15 +94,28 @@ export type Filing = {
   ownerUserId: string;
   ownerName?: string;
   status: string;
+  action?: string;
   message: string;
   returnMessage?: string;
   replyMessage?: string;
+  signMessage?: string;
+  forwardMessage?: string;
   approveMessage?: string;
+  cancelMessage?: string;
   attachments?: FilingAttachment[];
   createdAt: string;
   updatedAt: string;
   submittedAt: string;
   approvedAt?: string;
+};
+
+export type ProjectMemberPermission = "viewer" | "editor";
+
+export type ProjectMember = {
+  userId: string;
+  email: string;
+  displayName: string;
+  permission: string;
 };
 
 export type FilingTimelineEvent = {
@@ -399,6 +427,30 @@ export async function getDocumentById(cookieHeader: string, documentId: string):
       headers: {
         Cookie: cookieHeader
       }
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as { document?: DocumentDetail };
+    return payload.document ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getDocumentByIdClient(
+  documentId: string,
+  input?: { apiBaseURL?: string }
+): Promise<DocumentDetail | null> {
+  if (!documentId) {
+    return null;
+  }
+
+  try {
+    const response = await fetchWithSessionRetry(`${input?.apiBaseURL ?? apiBaseURL}/api/v1/documents/${documentId}`, {
+      cache: "no-store"
     });
 
     if (!response.ok) {
@@ -732,14 +784,18 @@ export function getAPIErrorMessage(payload: APIErrorPayload | null, fallback: st
   return firstError?.message || firstError?.error || payload.detail || payload.title || fallback;
 }
 
-export async function createFiling(input: {
+export type DocumentWorkflowAction = "submitted" | "returned" | "signed" | "forwarded" | "approved" | "cancelled";
+
+export async function performDocumentWorkflowAction(input: {
   apiBaseURL?: string;
   documentId: string;
+  action: DocumentWorkflowAction;
   message?: string;
   files?: File[];
 }): Promise<{ filing?: Filing; error?: string }> {
   try {
     const formData = new FormData();
+    formData.set("action", input.action);
     if (input.message?.trim()) {
       formData.set("message", input.message.trim());
     }
@@ -747,20 +803,123 @@ export async function createFiling(input: {
       formData.append("files", file);
     }
 
-    const response = await fetchWithSessionRetry(`${input.apiBaseURL ?? apiBaseURL}/api/v1/documents/${input.documentId}/filings`, {
-      method: "POST",
-      body: formData
-    });
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/documents/${input.documentId}/workflow`,
+      {
+        method: "PATCH",
+        body: formData
+      }
+    );
 
     if (!response.ok) {
       const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
       return {
-        error: getAPIErrorMessage(payload, "ไม่สามารถสร้าง filing ได้")
+        error: getAPIErrorMessage(payload, "ไม่สามารถดำเนินการได้")
       };
     }
 
     const payload = (await response.json()) as { filing?: Filing };
     return { filing: payload.filing };
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function getProjectMembersClient(
+  projectId: string,
+  input?: { apiBaseURL?: string }
+): Promise<{ members: ProjectMember[]; error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input?.apiBaseURL ?? apiBaseURL}/api/v1/projects/${projectId}/members`,
+      { cache: "no-store" }
+    );
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { members: [], error: getAPIErrorMessage(payload, "ไม่สามารถโหลดรายชื่อผู้เข้าถึงได้") };
+    }
+
+    const payload = (await response.json()) as { members?: ProjectMember[] };
+    return { members: payload.members ?? [] };
+  } catch {
+    return { members: [], error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function addProjectMember(input: {
+  apiBaseURL?: string;
+  projectId: string;
+  studentId: string;
+  permission?: ProjectMemberPermission;
+}): Promise<{ member?: ProjectMember; error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/members`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: input.studentId, permission: input.permission })
+      }
+    );
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถเพิ่มผู้เข้าถึงได้") };
+    }
+
+    const payload = (await response.json()) as { member?: ProjectMember };
+    return { member: payload.member };
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function updateProjectMemberPermission(input: {
+  apiBaseURL?: string;
+  projectId: string;
+  userId: string;
+  permission: ProjectMemberPermission;
+}): Promise<{ member?: ProjectMember; error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/members/${input.userId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ permission: input.permission })
+      }
+    );
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถเปลี่ยนสิทธิ์การเข้าถึงได้") };
+    }
+
+    const payload = (await response.json()) as { member?: ProjectMember };
+    return { member: payload.member };
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function removeProjectMember(input: {
+  apiBaseURL?: string;
+  projectId: string;
+  userId: string;
+}): Promise<{ error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/members/${input.userId}`,
+      { method: "DELETE" }
+    );
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถลบผู้เข้าถึงได้") };
+    }
+
+    return {};
   } catch {
     return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
   }

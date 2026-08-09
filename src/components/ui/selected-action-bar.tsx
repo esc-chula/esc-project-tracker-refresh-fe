@@ -13,7 +13,9 @@ export function SelectedActionBar({
   editIcon,
   deleteIcon,
   onEdit,
-  onDelete
+  onDelete,
+  hideEdit = false,
+  hideDelete = false
 }: {
   title: string;
   icon?: ReactNode;
@@ -21,17 +23,23 @@ export function SelectedActionBar({
   deleteIcon?: ReactNode;
   onEdit?: () => void;
   onDelete?: () => void;
+  hideEdit?: boolean;
+  hideDelete?: boolean;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-3">
       <span className={iconSlotClassName}>{icon ?? <DocumentIcon className="h-6 w-6" />}</span>
       <span className="min-w-0 truncate text-xl font-medium leading-8 text-black">{title}</span>
-      <button aria-label="แก้ไข" className={iconButtonClassName} onClick={onEdit} type="button">
-        <span className={iconSlotClassName}>{editIcon ?? <EditIcon className="h-6 w-6" />}</span>
-      </button>
-      <button aria-label="ลบ" className={deleteButtonClassName} onClick={onDelete} type="button">
-        <span className={iconSlotClassName}>{deleteIcon ?? <DeleteIcon className="h-6 w-6" />}</span>
-      </button>
+      {hideEdit ? null : (
+        <button aria-label="แก้ไข" className={iconButtonClassName} onClick={onEdit} type="button">
+          <span className={iconSlotClassName}>{editIcon ?? <EditIcon className="h-6 w-6" />}</span>
+        </button>
+      )}
+      {hideDelete ? null : (
+        <button aria-label="ลบ" className={deleteButtonClassName} onClick={onDelete} type="button">
+          <span className={iconSlotClassName}>{deleteIcon ?? <DeleteIcon className="h-6 w-6" />}</span>
+        </button>
+      )}
     </div>
   );
 }

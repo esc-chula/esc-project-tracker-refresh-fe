@@ -28,7 +28,7 @@ type DocumentTableProps = {
   isLoading?: boolean;
 };
 
-const documentColumnWidths = ["10%", "17.5%", "17.5%", "15%", "15%", "7.5%", "12.5%"] as const;
+const documentColumnWidths = ["10%", "15%", "15%", "15%", "15%", "12.5%", "12.5%"] as const;
 
 function TruncatedText({ children, className }: { children: ReactNode; className?: string }) {
   return <span className={`block w-full min-w-0 truncate text-xs md:text-sm ${className ?? ""}`}>{children}</span>;
