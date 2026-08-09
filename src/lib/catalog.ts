@@ -41,10 +41,10 @@ export const projectTypeFilterOptions = [
 
 export const documentTypeOptions = [
   { value: "0", label: "0xxx - เอกสารเปิดโครงการ" },
-  { value: "1-LOCATION_REQUEST", label: "1xxx - เอกสารขอใช้งานกายภาพ : ขอใช้สถานที่และอุปกรณ์" },
-  { value: "1-EQUIPMENT_REQUEST", label: "1xxx - เอกสารขอใช้งานกายภาพ : ขอใช้อุปกรณ์" },
+  { value: "1-LOCATION_EQUIPMENT_REQUEST", label: "1xxx - เอกสารขอใช้งานกายภาพ : ขอใช้สถานที่และอุปกรณ์" },
   { value: "1-PARKING_REQUEST", label: "1xxx - เอกสารขอใช้งานกายภาพ : ขอใช้ลานจอดรถ" },
   { value: "1-TRAFFIC_REROUTE_REQUEST", label: "1xxx - เอกสารขอใช้งานกายภาพ : ขอเปลี่ยนเส้นทางจราจร" },
+  { value: "1-TRANSPORT_VEHICLE_REQUEST", label: "1xxx - เอกสารขอใช้งานกายภาพ : ขอใช้รถขนของ" },
   { value: "2", label: "2xxx - เอกสารขอยืมสำรองจ่าย" },
   { value: "3", label: "3xxx - เอกสารขอสปอนเซอร์" },
   { value: "4", label: "4xxx - เอกสารขอบคุณสปอนเซอร์" },
@@ -59,7 +59,10 @@ export const documentStatusOptions = [
   { value: "draft", label: "ฉบับร่าง" },
   { value: "submitted", label: "กำลังตรวจสอบ" },
   { value: "returned", label: "ตีกลับ" },
-  { value: "approved", label: "อนุมัติ" }
+  { value: "signed", label: "รอส่งให้กิจการนิสิต" },
+  { value: "forwarded", label: "ส่งให้กิจการนิสิตแล้ว" },
+  { value: "approved", label: "อนุมัติ" },
+  { value: "cancelled", label: "ยกเลิกเอกสาร" }
 ] as const satisfies readonly CatalogOption[];
 
 export type DocumentStatus = (typeof documentStatusOptions)[number]["value"];
@@ -69,7 +72,10 @@ export function normalizeDocumentStatus(status: string): DocumentStatus {
     case "draft":
     case "submitted":
     case "returned":
+    case "signed":
+    case "forwarded":
     case "approved":
+    case "cancelled":
       return status;
     case "pending":
       return "submitted";
@@ -82,6 +88,15 @@ export function normalizeDocumentStatus(status: string): DocumentStatus {
   }
 }
 
+// Legacy 1xxx subtype values kept only so documents created before the
+// LOCATION_REQUEST/EQUIPMENT_REQUEST -> LOCATION_EQUIPMENT_REQUEST rename
+// still show a Thai label instead of a raw enum string. Not offered as
+// selectable options (see documentTypeOptions).
+const legacyDocumentSubTypeLabels: Record<string, string> = {
+  "1-LOCATION_REQUEST": "1xxx - เอกสารขอใช้งานกายภาพ : ขอใช้สถานที่และอุปกรณ์",
+  "1-EQUIPMENT_REQUEST": "1xxx - เอกสารขอใช้งานกายภาพ : ขอใช้อุปกรณ์"
+};
+
 export function getProjectTypeLabel(projectType: string) {
   return projectTypeOptions.find((option) => option.value === projectType)?.label ?? "ไม่ระบุฝ่าย";
 }
@@ -91,6 +106,7 @@ export function getDocumentTypeLabel(type: string, subType?: string) {
 
   return (
     documentTypeOptions.find((option) => option.value === compositeValue)?.label ??
+    legacyDocumentSubTypeLabels[compositeValue] ??
     documentTypeOptions.find((option) => option.value === type)?.label ??
     type
   );
