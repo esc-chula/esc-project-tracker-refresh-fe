@@ -119,7 +119,7 @@ function getCommentText(filing: Filing) {
   );
 }
 
-function isAdminAction(filing: Filing) {
+function isStaffAction(filing: Filing) {
   if (filing.action) {
     return filing.action !== "submitted";
   }
@@ -363,7 +363,7 @@ export function DocumentDetailContent({
                         <div className={hasFilingDetailPanel(filing) ? "grid xl:grid-cols-[300px_minmax(0,1fr)]" : "grid"}>
                           <div className={`space-y-7 px-7 pb-3 pt-6 xl:py-6 ${hasFilingDetailPanel(filing) ? "xl:border-r xl:border-gray-300" : ""}`}>
                             <div className="flex items-start gap-4">
-                              <ProfileAvatar className="h-12 w-12" role={isAdminAction(filing) ? "admin" : "student"} />
+                              <ProfileAvatar className="h-12 w-12" role={isStaffAction(filing) ? "secretary" : "student"} />
                               <div className="min-w-0">
                                 <div className="truncate text-base font-bold leading-6 text-black md:leading-6 xl:leading-8">
                                   {getActorLabel(filing, ownerDisplayName, currentUserName)}
