@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { FormModalShell } from "@/components/ui/form-modal-shell";
 import { FormInput } from "@/components/ui/form-fields";
@@ -10,6 +11,14 @@ type ProjectPopupModalProps = {
   open: boolean;
   projectName: string;
 };
+
+function sanitizeBudgetInput(value: string) {
+  return value.replace(/[^\d]/g, "");
+}
+
+function parseBudgetValue(value: string) {
+  return Number(value) || 0;
+}
 
 export function ProjectPopupModal({ onClose, open, projectName }: ProjectPopupModalProps) {
   if (!open) {
@@ -26,6 +35,14 @@ export function ProjectPopupModal({ onClose, open, projectName }: ProjectPopupMo
 }
 
 function BudgetInput({ onCancel }: { onCancel: () => void }) {
+  const [activityBudget, setActivityBudget] = useState("");
+  const [sponsorBudget, setSponsorBudget] = useState("");
+  const [otherBudget, setOtherBudget] = useState("");
+  const totalBudget =
+    parseBudgetValue(activityBudget) +
+    parseBudgetValue(sponsorBudget) +
+    parseBudgetValue(otherBudget);
+
   return (
     <form
       className="space-y-4"
@@ -35,19 +52,37 @@ function BudgetInput({ onCancel }: { onCancel: () => void }) {
     >
       <label className="block space-y-2">
         <span className="text-[16px] font-normal text-black">งบกิจการนิสิต</span>
-        <FormInput placeholder="กรอกจำนวนเงิน" type="text" />
+        <FormInput
+          inputMode="numeric"
+          onChange={(event) => setActivityBudget(sanitizeBudgetInput(event.target.value))}
+          placeholder="กรอกจำนวนเงิน"
+          type="text"
+          value={activityBudget}
+        />
       </label>
       <label className="block space-y-2">
         <span className="text-[16px] font-normal text-black">งบสปอนเซอร์</span>
-        <FormInput placeholder="กรอกจำนวนเงิน" type="text" />
+        <FormInput
+          inputMode="numeric"
+          onChange={(event) => setSponsorBudget(sanitizeBudgetInput(event.target.value))}
+          placeholder="กรอกจำนวนเงิน"
+          type="text"
+          value={sponsorBudget}
+        />
       </label>
       <label className="block space-y-2">
         <span className="text-[16px] font-normal text-black">งบอื่นๆ</span>
-        <FormInput placeholder="กรอกจำนวนเงิน" type="text" />
+        <FormInput
+          inputMode="numeric"
+          onChange={(event) => setOtherBudget(sanitizeBudgetInput(event.target.value))}
+          placeholder="กรอกจำนวนเงิน"
+          type="text"
+          value={otherBudget}
+        />
       </label>
       <div className="mt-4 flex items-center justify-between font-semibold">
         <span className="text-[16px] text-red-700">ยอดรวมทั้งหมด</span>
-        <span className="text-[20px] text-red-700">฿ xx</span>
+        <span className="text-[20px] text-red-700">฿ {totalBudget.toLocaleString("th-TH")}</span>
       </div>
       <FormModalActions
         onCancel={onCancel}
