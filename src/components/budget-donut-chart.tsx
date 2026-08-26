@@ -30,7 +30,7 @@ const chartConfig = {
 		color: '#f87171',
 	},
 	others: {
-		label: 'อื่นๆ',
+		label: 'อื่น ๆ',
 		color: '#fecaca',
 	},
 } satisfies ChartConfig
