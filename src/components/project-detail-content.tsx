@@ -9,6 +9,7 @@ import { DocumentsExplorer } from "@/components/documents-explorer";
 import { ManageProjectMembersModal } from "@/components/manage-project-members-modal";
 import { NewDocumentModal } from "@/components/new-document-modal";
 import { NewProjectModal } from "@/components/new-project-modal";
+import { ProjectPopupModal } from "@/components/project-popup-modal";
 import { ActionSuccessPopup } from "@/components/ui/action-success-popup";
 import { Button } from "@/components/ui/button";
 import { ProjectIcon } from "@/components/ui/document-action-icons";
@@ -35,6 +36,7 @@ export function ProjectDetailContent({
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
   const [isProjectEditOpen, setIsProjectEditOpen] = useState(false);
   const [isProjectDeleteOpen, setIsProjectDeleteOpen] = useState(false);
+  const [isProjectPopupOpen, setIsProjectPopupOpen] = useState(false);
   const [isManageMembersOpen, setIsManageMembersOpen] = useState(false);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -113,6 +115,9 @@ export function ProjectDetailContent({
                 จัดการผู้เข้าถึง
               </Button>
             ) : null}
+            <Button onClick={() => setIsProjectPopupOpen(true)} type="button" variant="outline">
+              เปิด Popup
+            </Button>
           </div>
         }
         createButtonLabel="สร้างเอกสารใหม่"
@@ -171,6 +176,12 @@ export function ProjectDetailContent({
         onClose={() => setIsManageMembersOpen(false)}
         open={isManageMembersOpen}
         projectId={project.id}
+      />
+
+      <ProjectPopupModal
+        onClose={() => setIsProjectPopupOpen(false)}
+        open={isProjectPopupOpen}
+        projectName={project.name}
       />
 
       <ActionSuccessPopup message={successMessage} onClose={() => setSuccessMessage("")} open={Boolean(successMessage)} />
