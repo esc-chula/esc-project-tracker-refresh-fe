@@ -13,11 +13,26 @@ type ProjectPopupModalProps = {
 };
 
 function sanitizeBudgetInput(value: string) {
-  return value.replace(/[^\d]/g, "");
+  const sanitizedValue = value.replace(/[^\d.]/g, "");
+  const [wholeNumber = "", decimal = ""] = sanitizedValue.split(".");
+  const decimalValue = decimal.slice(0, 2);
+
+  if (!sanitizedValue.includes(".")) {
+    return wholeNumber;
+  }
+
+  return `${wholeNumber}.${decimalValue}`;
 }
 
 function parseBudgetValue(value: string) {
   return Number(value) || 0;
+}
+
+function formatBudget(value: number) {
+  return value.toLocaleString("th-TH", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2
+  });
 }
 
 export function ProjectPopupModal({ onClose, open, projectName }: ProjectPopupModalProps) {
@@ -53,7 +68,7 @@ function BudgetInput({ onCancel }: { onCancel: () => void }) {
       <label className="block space-y-2">
         <span className="text-[16px] font-normal text-black">งบกิจการนิสิต</span>
         <FormInput
-          inputMode="numeric"
+          inputMode="decimal"
           onChange={(event) => setActivityBudget(sanitizeBudgetInput(event.target.value))}
           placeholder="กรอกจำนวนเงิน"
           type="text"
@@ -63,7 +78,7 @@ function BudgetInput({ onCancel }: { onCancel: () => void }) {
       <label className="block space-y-2">
         <span className="text-[16px] font-normal text-black">งบสปอนเซอร์</span>
         <FormInput
-          inputMode="numeric"
+          inputMode="decimal"
           onChange={(event) => setSponsorBudget(sanitizeBudgetInput(event.target.value))}
           placeholder="กรอกจำนวนเงิน"
           type="text"
@@ -73,7 +88,7 @@ function BudgetInput({ onCancel }: { onCancel: () => void }) {
       <label className="block space-y-2">
         <span className="text-[16px] font-normal text-black">งบอื่นๆ</span>
         <FormInput
-          inputMode="numeric"
+          inputMode="decimal"
           onChange={(event) => setOtherBudget(sanitizeBudgetInput(event.target.value))}
           placeholder="กรอกจำนวนเงิน"
           type="text"
@@ -82,7 +97,7 @@ function BudgetInput({ onCancel }: { onCancel: () => void }) {
       </label>
       <div className="mt-4 flex items-center justify-between font-semibold">
         <span className="text-[16px] text-red-700">ยอดรวมทั้งหมด</span>
-        <span className="text-[20px] text-red-700">฿ {totalBudget.toLocaleString("th-TH")}</span>
+        <span className="text-[20px] text-red-700">฿ {formatBudget(totalBudget)}</span>
       </div>
       <FormModalActions
         onCancel={onCancel}
