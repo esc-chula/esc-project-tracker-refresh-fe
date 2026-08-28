@@ -58,10 +58,18 @@ function toggleSelectedProjectId(currentSelectedProjectIds: Set<string>, project
 
 export function ProjectDocumentsAccordion({ items, onSelectedProjectIdsChange, selectedProjectIds }: ProjectDocumentsAccordionProps) {
   const [openProjectIds, setOpenProjectIds] = useState<Set<string>>(() => new Set([items[0]?.project.id].filter(Boolean)));
-  const isAllProjectsSelected = items.length > 0 && selectedProjectIds.size === items.length;
+  const isAllVisibleProjectsSelected = items.length > 0 && items.every(({ project }) => selectedProjectIds.has(project.id));
 
-  function toggleAllSelectedProjects() {
-    onSelectedProjectIdsChange(isAllProjectsSelected ? new Set() : new Set(items.map(({ project }) => project.id)));
+  function toggleAllVisibleProjects() {
+    const nextSelectedProjectIds = new Set(selectedProjectIds);
+
+    if (isAllVisibleProjectsSelected) {
+      items.forEach(({ project }) => nextSelectedProjectIds.delete(project.id));
+    } else {
+      items.forEach(({ project }) => nextSelectedProjectIds.add(project.id));
+    }
+
+    onSelectedProjectIdsChange(nextSelectedProjectIds);
   }
 
   return (
@@ -72,8 +80,8 @@ export function ProjectDocumentsAccordion({ items, onSelectedProjectIdsChange, s
             <input
               aria-label="เลือกโครงการทั้งหมด"
               className="h-4 w-4 rounded border-gray-300 accent-red-700"
-              checked={isAllProjectsSelected}
-              onChange={toggleAllSelectedProjects}
+              checked={isAllVisibleProjectsSelected}
+              onChange={toggleAllVisibleProjects}
               type="checkbox"
             />
           </div>
