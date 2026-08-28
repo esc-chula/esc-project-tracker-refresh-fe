@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { Label, Pie, PieChart } from 'recharts'
+import Image from 'next/image'
 
 import { ChartConfig, ChartContainer } from '@/components/ui/chart'
 
@@ -138,7 +139,7 @@ export function BudgetDonutChart({
 															className="cursor-pointer"
 															aria-label="แก้ไขงบประมาณ"
 														>
-															<img
+															<Image
 																src="/icons/pencil.svg"
 																width={16}
 																height={16}
