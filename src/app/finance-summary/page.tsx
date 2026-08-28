@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AppContentSection } from "@/components/app-shell";
+import { BudgetDonutChart, type BudgetItem } from "@/components/budget-donut-chart";
 import {
   ProjectDocumentsAccordion,
   type ProjectDocumentsAccordionItem
@@ -92,13 +93,17 @@ function sumSelectedBudgets(items: ProjectDocumentsAccordionItem[], selectedProj
 export default function FinanceSummaryPage() {
   const [selectedProjectIds, setSelectedProjectIds] = useState<Set<string>>(() => new Set(mockProjectDocuments.map(({ project }) => project.id)));
   const selectedBudgets = useMemo(() => sumSelectedBudgets(mockProjectDocuments, selectedProjectIds), [selectedProjectIds]);
-  const selectedActivityBudget = selectedBudgets.activityBudget;
-  const selectedOtherBudget = selectedBudgets.otherBudget;
-  const selectedSponsorBudget = selectedBudgets.sponsorBudget;
+  
+  const chartData: BudgetItem[] = useMemo(() => [
+    { category: "studentAffairs", amount: selectedBudgets.activityBudget },
+    { category: "sponsor", amount: selectedBudgets.sponsorBudget },
+    { category: "others", amount: selectedBudgets.otherBudget },
+  ], [selectedBudgets]);
 
   return (
     <AppContentSection>
       <div className="space-y-6">
+        <BudgetDonutChart data={chartData} />
         <div className="overflow-x-auto">
           <ProjectDocumentsAccordion
             items={mockProjectDocuments}
