@@ -10,6 +10,8 @@ import {
   getGoogleLoginURL,
   getProjects
 } from "@/lib/api";
+import { localDemoDocuments, localDemoProject, localDemoUser } from "@/lib/local-demo-data";
+import { isLocalMockMode } from "@/lib/mock-mode";
 
 function normalizeSlug(slug: string[]) {
   if (slug.length === 2) {
@@ -51,6 +53,19 @@ export default async function ProjectPage({
 
   if ("invalid" in normalizedSlug) {
     notFound();
+  }
+
+  if (isLocalMockMode) {
+    return (
+      <AppContentSection>
+        <ProjectDetailContent
+          apiBaseURL=""
+          currentUser={localDemoUser}
+          initialDocuments={localDemoDocuments}
+          initialProject={localDemoProject}
+        />
+      </AppContentSection>
+    );
   }
 
   const decodedSlug = normalizedSlug.decodedSlug;
