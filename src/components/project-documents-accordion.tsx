@@ -96,16 +96,22 @@ export function ProjectDocumentsAccordion({ items, onSelectedProjectIdsChange, s
 
         {items.map(({ documents, project }) => {
           const isOpen = openProjectIds.has(project.id);
+          const isSelected = selectedProjectIds.has(project.id);
           const totalBudget = project.activityBudget + project.sponsorBudget + project.otherBudget;
 
           return (
             <Fragment key={project.id}>
-              <div className="grid h-12 grid-cols-[56px_2fr_5fr_3fr_3fr_3fr_3fr_48px] items-center gap-3 px-4 text-sm font-normal text-black">
+              <div
+                className={cn(
+                  "grid h-12 grid-cols-[56px_2fr_5fr_3fr_3fr_3fr_3fr_48px] items-center gap-3 px-4 text-sm font-normal text-black",
+                  isSelected && "bg-red-100"
+                )}
+              >
                 <div className="flex items-center justify-start">
                   <input
                     aria-label={`เลือกโครงการ ${project.projectCode}`}
                     className="h-4 w-4 rounded border-gray-300 accent-red-700"
-                    checked={selectedProjectIds.has(project.id)}
+                    checked={isSelected}
                     onChange={() => onSelectedProjectIdsChange(toggleSelectedProjectId(selectedProjectIds, project.id))}
                     type="checkbox"
                   />
