@@ -1,8 +1,17 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import { AppContentSection } from "@/components/app-shell";
 import {
   ProjectDocumentsAccordion,
   type ProjectDocumentsAccordionItem
 } from "@/components/project-documents-accordion";
+
+type SelectedProjectBudgets = {
+  activityBudget: number;
+  otherBudget: number;
+  sponsorBudget: number;
+};
 
 const mockProjectDocuments: ProjectDocumentsAccordionItem[] = [
   {
@@ -59,12 +68,43 @@ const mockProjectDocuments: ProjectDocumentsAccordionItem[] = [
   }
 ];
 
+function sumSelectedBudgets(items: ProjectDocumentsAccordionItem[], selectedProjectIds: Set<string>): SelectedProjectBudgets {
+  return items.reduce<SelectedProjectBudgets>(
+    (selectedBudgets, { project }) => {
+      if (!selectedProjectIds.has(project.id)) {
+        return selectedBudgets;
+      }
+
+      return {
+        activityBudget: selectedBudgets.activityBudget + project.activityBudget,
+        otherBudget: selectedBudgets.otherBudget + project.otherBudget,
+        sponsorBudget: selectedBudgets.sponsorBudget + project.sponsorBudget
+      };
+    },
+    {
+      activityBudget: 0,
+      otherBudget: 0,
+      sponsorBudget: 0
+    }
+  );
+}
+
 export default function FinanceSummaryPage() {
+  const [selectedProjectIds, setSelectedProjectIds] = useState<Set<string>>(() => new Set(mockProjectDocuments.map(({ project }) => project.id)));
+  const selectedBudgets = useMemo(() => sumSelectedBudgets(mockProjectDocuments, selectedProjectIds), [selectedProjectIds]);
+  const selectedActivityBudget = selectedBudgets.activityBudget;
+  const selectedOtherBudget = selectedBudgets.otherBudget;
+  const selectedSponsorBudget = selectedBudgets.sponsorBudget;
+
   return (
     <AppContentSection>
       <div className="space-y-6">
         <div className="overflow-x-auto">
-          <ProjectDocumentsAccordion items={mockProjectDocuments} />
+          <ProjectDocumentsAccordion
+            items={mockProjectDocuments}
+            onSelectedProjectIdsChange={setSelectedProjectIds}
+            selectedProjectIds={selectedProjectIds}
+          />
         </div>
       </div>
     </AppContentSection>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,40 +22,14 @@ export type ProjectDocumentsAccordionItem = {
   };
 };
 
-export type SelectedProjectBudgets = {
-  activityBudget: number;
-  otherBudget: number;
-  sponsorBudget: number;
-};
-
 type ProjectDocumentsAccordionProps = {
   items: ProjectDocumentsAccordionItem[];
-  onSelectedBudgetsChange?: (selectedBudgets: SelectedProjectBudgets) => void;
+  onSelectedProjectIdsChange: (selectedProjectIds: Set<string>) => void;
+  selectedProjectIds: Set<string>;
 };
 
 function formatBudget(value: number) {
   return `฿ ${value.toLocaleString("th-TH")}`;
-}
-
-function sumSelectedBudgets(items: ProjectDocumentsAccordionItem[], selectedProjectIds: Set<string>) {
-  return items.reduce(
-    (selectedBudgets, { project }) => {
-      if (!selectedProjectIds.has(project.id)) {
-        return selectedBudgets;
-      }
-
-      return {
-        activityBudget: selectedBudgets.activityBudget + project.activityBudget,
-        otherBudget: selectedBudgets.otherBudget + project.otherBudget,
-        sponsorBudget: selectedBudgets.sponsorBudget + project.sponsorBudget
-      };
-    },
-    {
-      activityBudget: 0,
-      otherBudget: 0,
-      sponsorBudget: 0
-    }
-  );
 }
 
 function toggleExpandedProjectId(currentExpandedProjectIds: Set<string>, projectId: string) {
@@ -70,45 +44,24 @@ function toggleExpandedProjectId(currentExpandedProjectIds: Set<string>, project
   return nextExpandedProjectIds;
 }
 
-export function ProjectDocumentsAccordion({ items, onSelectedBudgetsChange }: ProjectDocumentsAccordionProps) {
-  const [openProjectIds, setOpenProjectIds] = useState<Set<string>>(() => new Set([items[0]?.project.id].filter(Boolean)));
-  const [selectedProjectIds, setSelectedProjectIds] = useState<Set<string>>(() => new Set(items.map(({ project }) => project.id)));
-  const selectedBudgets = useMemo(() => sumSelectedBudgets(items, selectedProjectIds), [items, selectedProjectIds]);
-  const selectedActivityBudget = selectedBudgets.activityBudget;
-  const selectedOtherBudget = selectedBudgets.otherBudget;
-  const selectedSponsorBudget = selectedBudgets.sponsorBudget;
-  const isAllProjectsSelected = items.length > 0 && selectedProjectIds.size === items.length;
+function toggleSelectedProjectId(currentSelectedProjectIds: Set<string>, projectId: string) {
+  const nextSelectedProjectIds = new Set(currentSelectedProjectIds);
 
-  useEffect(() => {
-    onSelectedBudgetsChange?.({
-      activityBudget: selectedActivityBudget,
-      otherBudget: selectedOtherBudget,
-      sponsorBudget: selectedSponsorBudget
-    });
-  }, [onSelectedBudgetsChange, selectedActivityBudget, selectedOtherBudget, selectedSponsorBudget]);
-
-  function toggleSelectedProjectId(projectId: string) {
-    setSelectedProjectIds((currentSelectedProjectIds) => {
-      const nextSelectedProjectIds = new Set(currentSelectedProjectIds);
-
-      if (nextSelectedProjectIds.has(projectId)) {
-        nextSelectedProjectIds.delete(projectId);
-      } else {
-        nextSelectedProjectIds.add(projectId);
-      }
-
-      return nextSelectedProjectIds;
-    });
+  if (nextSelectedProjectIds.has(projectId)) {
+    nextSelectedProjectIds.delete(projectId);
+  } else {
+    nextSelectedProjectIds.add(projectId);
   }
 
-  function toggleAllSelectedProjects() {
-    setSelectedProjectIds((currentSelectedProjectIds) => {
-      if (currentSelectedProjectIds.size === items.length) {
-        return new Set();
-      }
+  return nextSelectedProjectIds;
+}
 
-      return new Set(items.map(({ project }) => project.id));
-    });
+export function ProjectDocumentsAccordion({ items, onSelectedProjectIdsChange, selectedProjectIds }: ProjectDocumentsAccordionProps) {
+  const [openProjectIds, setOpenProjectIds] = useState<Set<string>>(() => new Set([items[0]?.project.id].filter(Boolean)));
+  const isAllProjectsSelected = items.length > 0 && selectedProjectIds.size === items.length;
+
+  function toggleAllSelectedProjects() {
+    onSelectedProjectIdsChange(isAllProjectsSelected ? new Set() : new Set(items.map(({ project }) => project.id)));
   }
 
   return (
@@ -145,7 +98,7 @@ export function ProjectDocumentsAccordion({ items, onSelectedBudgetsChange }: Pr
                     aria-label={`เลือกโครงการ ${project.projectCode}`}
                     className="h-4 w-4 rounded border-gray-300 accent-red-700"
                     checked={selectedProjectIds.has(project.id)}
-                    onChange={() => toggleSelectedProjectId(project.id)}
+                    onChange={() => onSelectedProjectIdsChange(toggleSelectedProjectId(selectedProjectIds, project.id))}
                     type="checkbox"
                   />
                 </div>
