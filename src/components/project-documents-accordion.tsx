@@ -1,0 +1,207 @@
+"use client";
+
+import { Fragment, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { ChevronDown, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export type ProjectDocumentsAccordionItem = {
+  documents: {
+    documentCode: string;
+    href: string;
+    id: string;
+    name: string;
+  }[];
+  project: {
+    activityBudget: number;
+    id: string;
+    name: string;
+    otherBudget: number;
+    projectCode: string;
+    sponsorBudget: number;
+  };
+};
+
+export type SelectedProjectBudgets = {
+  activityBudget: number;
+  otherBudget: number;
+  sponsorBudget: number;
+};
+
+type ProjectDocumentsAccordionProps = {
+  items: ProjectDocumentsAccordionItem[];
+  onSelectedBudgetsChange?: (selectedBudgets: SelectedProjectBudgets) => void;
+};
+
+function formatBudget(value: number) {
+  return `฿ ${value.toLocaleString("th-TH")}`;
+}
+
+function sumSelectedBudgets(items: ProjectDocumentsAccordionItem[], selectedProjectIds: Set<string>) {
+  return items.reduce(
+    (selectedBudgets, { project }) => {
+      if (!selectedProjectIds.has(project.id)) {
+        return selectedBudgets;
+      }
+
+      return {
+        activityBudget: selectedBudgets.activityBudget + project.activityBudget,
+        otherBudget: selectedBudgets.otherBudget + project.otherBudget,
+        sponsorBudget: selectedBudgets.sponsorBudget + project.sponsorBudget
+      };
+    },
+    {
+      activityBudget: 0,
+      otherBudget: 0,
+      sponsorBudget: 0
+    }
+  );
+}
+
+function toggleExpandedProjectId(currentExpandedProjectIds: Set<string>, projectId: string) {
+  const nextExpandedProjectIds = new Set(currentExpandedProjectIds);
+
+  if (nextExpandedProjectIds.has(projectId)) {
+    nextExpandedProjectIds.delete(projectId);
+  } else {
+    nextExpandedProjectIds.add(projectId);
+  }
+
+  return nextExpandedProjectIds;
+}
+
+export function ProjectDocumentsAccordion({ items, onSelectedBudgetsChange }: ProjectDocumentsAccordionProps) {
+  const [openProjectIds, setOpenProjectIds] = useState<Set<string>>(() => new Set([items[0]?.project.id].filter(Boolean)));
+  const [selectedProjectIds, setSelectedProjectIds] = useState<Set<string>>(() => new Set(items.map(({ project }) => project.id)));
+  const selectedBudgets = useMemo(() => sumSelectedBudgets(items, selectedProjectIds), [items, selectedProjectIds]);
+  const selectedActivityBudget = selectedBudgets.activityBudget;
+  const selectedOtherBudget = selectedBudgets.otherBudget;
+  const selectedSponsorBudget = selectedBudgets.sponsorBudget;
+  const isAllProjectsSelected = items.length > 0 && selectedProjectIds.size === items.length;
+
+  useEffect(() => {
+    onSelectedBudgetsChange?.({
+      activityBudget: selectedActivityBudget,
+      otherBudget: selectedOtherBudget,
+      sponsorBudget: selectedSponsorBudget
+    });
+  }, [onSelectedBudgetsChange, selectedActivityBudget, selectedOtherBudget, selectedSponsorBudget]);
+
+  function toggleSelectedProjectId(projectId: string) {
+    setSelectedProjectIds((currentSelectedProjectIds) => {
+      const nextSelectedProjectIds = new Set(currentSelectedProjectIds);
+
+      if (nextSelectedProjectIds.has(projectId)) {
+        nextSelectedProjectIds.delete(projectId);
+      } else {
+        nextSelectedProjectIds.add(projectId);
+      }
+
+      return nextSelectedProjectIds;
+    });
+  }
+
+  function toggleAllSelectedProjects() {
+    setSelectedProjectIds((currentSelectedProjectIds) => {
+      if (currentSelectedProjectIds.size === items.length) {
+        return new Set();
+      }
+
+      return new Set(items.map(({ project }) => project.id));
+    });
+  }
+
+  return (
+    <div className="min-w-[900px] overflow-hidden">
+      <div className="divide-y divide-gray-200">
+        <div className="grid grid-cols-[56px_2fr_5fr_3fr_3fr_3fr_3fr_48px] items-center gap-3 px-4 py-2 text-base font-bold text-black">
+          <div className="flex items-center justify-start">
+            <input
+              aria-label="เลือกโครงการทั้งหมด"
+              className="h-4 w-4 rounded border-gray-300 accent-red-700"
+              checked={isAllProjectsSelected}
+              onChange={toggleAllSelectedProjects}
+              type="checkbox"
+            />
+          </div>
+          <span>รหัส</span>
+          <span>ชื่อโครงการ</span>
+          <span className="text-right">งบกิจการนิสิต</span>
+          <span className="text-right">งบสปอนเซอร์</span>
+          <span className="text-right">งบอื่นๆ</span>
+          <span className="text-right">งบรวม</span>
+          <span />
+        </div>
+
+        {items.map(({ documents, project }) => {
+          const isOpen = openProjectIds.has(project.id);
+          const totalBudget = project.activityBudget + project.sponsorBudget + project.otherBudget;
+
+          return (
+            <Fragment key={project.id}>
+              <div className="grid h-12 grid-cols-[56px_2fr_5fr_3fr_3fr_3fr_3fr_48px] items-center gap-3 px-4 text-sm font-normal text-black">
+                <div className="flex items-center justify-start">
+                  <input
+                    aria-label={`เลือกโครงการ ${project.projectCode}`}
+                    className="h-4 w-4 rounded border-gray-300 accent-red-700"
+                    checked={selectedProjectIds.has(project.id)}
+                    onChange={() => toggleSelectedProjectId(project.id)}
+                    type="checkbox"
+                  />
+                </div>
+                <div className="flex min-w-0 items-center gap-0 ml-[-30px]">
+                  <button
+                    aria-expanded={isOpen}
+                    aria-label={isOpen ? "ย่อรายการเอกสาร" : "ขยายรายการเอกสาร"}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-black transition hover:bg-gray-100"
+                    onClick={() => setOpenProjectIds((current) => toggleExpandedProjectId(current, project.id))}
+                    type="button"
+                  >
+                    <ChevronDown className={cn("h-5 w-5 transition-transform", !isOpen && "-rotate-90")} />
+                  </button>
+                  <span className="min-w-0 truncate">{project.projectCode}</span>
+                </div>
+                <span className="min-w-0 truncate">{project.name}</span>
+                <span className="text-right">{formatBudget(project.activityBudget)}</span>
+                <span className="text-right">{formatBudget(project.sponsorBudget)}</span>
+                <span className="text-right">{formatBudget(project.otherBudget)}</span>
+                <span className="text-right font-semibold text-red-700">{formatBudget(totalBudget)}</span>
+                <span />
+              </div>
+
+              {isOpen && documents.length > 0
+                ? documents.map((document) => (
+                    <div
+                      className="grid h-12 grid-cols-[56px_2fr_5fr_3fr_3fr_3fr_3fr_48px] items-center gap-3 bg-gray-100 px-4 text-sm font-normal text-black"
+                      key={document.id}
+                    >
+                      <span />
+                      <span className="text-black">{document.documentCode}</span>
+                      <div className="flex min-w-0 items-center gap-2 text-black">
+                        <span className="min-w-0 truncate">{document.name}</span>
+                        <Link
+                          aria-label={`เปิดเอกสาร ${document.documentCode}`}
+                          className="shrink-0 text-black transition hover:text-red-700"
+                          href={document.href}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Link>
+                      </div>
+                    </div>
+                  ))
+                : null}
+
+              {isOpen && documents.length === 0 ? (
+                <div className="grid h-12 grid-cols-[56px_2fr_5fr_3fr_3fr_3fr_3fr_48px] items-center gap-3 bg-gray-50 px-4 text-sm text-gray-500">
+                  <span />
+                  <span />
+                  <span className="min-w-0 truncate">ยังไม่มีเอกสารในโครงการนี้</span>
+                </div>
+              ) : null}
+            </Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
