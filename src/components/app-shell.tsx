@@ -8,8 +8,6 @@ import { usePathname } from "next/navigation";
 import { AppNavProfile } from "@/components/ui/app-nav-profile";
 import { ProfileCompletionModal } from "@/components/profile-completion-modal";
 import { getCurrentUserClient, type CurrentUser } from "@/lib/api";
-import { localDemoUser } from "@/lib/local-demo-data";
-import { isLocalMockMode } from "@/lib/mock-mode";
 import { cn } from "@/lib/utils";
 
 export type AppNavItem = {
@@ -28,11 +26,6 @@ export function AppChrome({
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
-    if (isLocalMockMode) {
-      setCurrentUser(localDemoUser);
-      return;
-    }
-
     let cancelled = false;
 
     void getCurrentUserClient().then((user) => {

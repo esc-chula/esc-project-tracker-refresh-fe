@@ -8,10 +8,9 @@ import {
   getCurrentUser,
   getDocumentByCode,
   getGoogleLoginURL,
+  getProjectDeadlines,
   getProjects
 } from "@/lib/api";
-import { localDemoDocuments, localDemoProject, localDemoUser } from "@/lib/local-demo-data";
-import { isLocalMockMode } from "@/lib/mock-mode";
 
 function normalizeSlug(slug: string[]) {
   if (slug.length === 2) {
@@ -53,19 +52,6 @@ export default async function ProjectPage({
 
   if ("invalid" in normalizedSlug) {
     notFound();
-  }
-
-  if (isLocalMockMode) {
-    return (
-      <AppContentSection>
-        <ProjectDetailContent
-          apiBaseURL=""
-          currentUser={localDemoUser}
-          initialDocuments={localDemoDocuments}
-          initialProject={localDemoProject}
-        />
-      </AppContentSection>
-    );
   }
 
   const decodedSlug = normalizedSlug.decodedSlug;
@@ -124,11 +110,14 @@ export default async function ProjectPage({
     notFound();
   }
 
+  const deadlineResult = await getProjectDeadlines(cookieHeader, project.id);
+
   return (
     <AppContentSection>
       <ProjectDetailContent
         apiBaseURL={apiBaseURL}
-        currentUser={currentUser}
+        initialDeadlinePermissions={deadlineResult.permissions}
+        initialDeadlines={deadlineResult.deadlines}
         initialDocuments={[]}
         initialProject={project}
       />

@@ -2,8 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CurrentUser, Document, Project } from "@/lib/api";
-import { deleteProject, getDocumentsByProjectClient } from "@/lib/api";
+import type { Document, Project } from "@/lib/api";
+import {
+  createProjectDeadline,
+  deleteProject,
+  deleteProjectDeadline,
+  getDocumentsByProjectClient,
+  updateProjectDeadline
+} from "@/lib/api";
 import { ConfirmDeleteModal } from "@/components/confirm-delete-modal";
 import { DocumentsExplorer } from "@/components/documents-explorer";
 import { ManageProjectMembersModal } from "@/components/manage-project-members-modal";
@@ -18,17 +24,18 @@ import { SelectedActionBar } from "@/components/ui/selected-action-bar";
 import type { DocumentExplorerRow } from "@/lib/document-view";
 import { getRecentItems, saveRecentItem, type RecentItem } from "@/lib/recent-items";
 import { buildGlobalSearchItems } from "@/lib/search-items";
-import type { DeadlineFormValues, ProjectDeadline } from "@/lib/deadline";
-import { getMockDeadlinePermissions, getMockDeadlines } from "@/lib/deadline.mock";
+import type { DeadlineFormValues, DeadlinePermissions, ProjectDeadline } from "@/lib/deadline";
 
 export function ProjectDetailContent({
   apiBaseURL,
-  currentUser,
+  initialDeadlinePermissions,
+  initialDeadlines,
   initialDocuments,
   initialProject
 }: {
   apiBaseURL: string;
-  currentUser: CurrentUser;
+  initialDeadlinePermissions: DeadlinePermissions;
+  initialDeadlines: ProjectDeadline[];
   initialDocuments: Document[];
   initialProject: Project;
 }) {
@@ -40,7 +47,7 @@ export function ProjectDetailContent({
   const [isProjectEditOpen, setIsProjectEditOpen] = useState(false);
   const [isProjectDeleteOpen, setIsProjectDeleteOpen] = useState(false);
   const [isManageMembersOpen, setIsManageMembersOpen] = useState(false);
-  const [deadlines, setDeadlines] = useState<ProjectDeadline[]>(() => getMockDeadlines(initialProject.id));
+  const [deadlines, setDeadlines] = useState<ProjectDeadline[]>(initialDeadlines);
   const [editingDeadline, setEditingDeadline] = useState<ProjectDeadline | null>(null);
   const [deadlineToDelete, setDeadlineToDelete] = useState<ProjectDeadline | null>(null);
   const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
@@ -53,23 +60,61 @@ export function ProjectDetailContent({
   const canDelete = permissions?.canDelete ?? false;
   const canCreateDocument = permissions?.canCreateDocument ?? false;
   const canManageMembers = permissions?.canManageMembers ?? false;
-  const deadlinePermissions = getMockDeadlinePermissions(currentUser.role);
+  const deadlinePermissions = initialDeadlinePermissions;
 
   function closeDeadlineModal() {
     setEditingDeadline(null);
     setIsDeadlineModalOpen(false);
   }
 
-  function saveDeadline(values: DeadlineFormValues) {
-    const now = new Date().toISOString();
+  async function saveDeadline(values: DeadlineFormValues): Promise<string | undefined> {
     if (editingDeadline) {
-      setDeadlines((current) => current.map((deadline) => deadline.id === editingDeadline.id ? { ...deadline, ...values, updatedAt: now } : deadline));
+      const result = await updateProjectDeadline({
+        apiBaseURL,
+        deadlineId: editingDeadline.id,
+        dueDate: values.dueDate,
+        projectId: project.id,
+        title: values.title
+      });
+      if (result.error || !result.deadline) {
+        return result.error ?? "ไม่สามารถแก้ไข Deadline ได้";
+      }
+      setDeadlines((current) => current.map((deadline) => deadline.id === editingDeadline.id ? result.deadline! : deadline));
       setSuccessMessage("บันทึก Deadline สำเร็จ");
     } else {
-      setDeadlines((current) => [...current, { ...values, createdAt: now, id: `deadline-local-${crypto.randomUUID()}`, projectId: project.id, updatedAt: now }]);
+      const result = await createProjectDeadline({
+        apiBaseURL,
+        dueDate: values.dueDate,
+        projectId: project.id,
+        title: values.title
+      });
+      if (result.error || !result.deadline) {
+        return result.error ?? "ไม่สามารถเพิ่ม Deadline ได้";
+      }
+      setDeadlines((current) => [...current, result.deadline!]);
       setSuccessMessage("เพิ่ม Deadline สำเร็จ");
     }
     closeDeadlineModal();
+    return undefined;
+  }
+
+  async function deleteDeadline() {
+    if (!deadlineToDelete) return;
+
+    const result = await deleteProjectDeadline({
+      apiBaseURL,
+      deadlineId: deadlineToDelete.id,
+      projectId: project.id
+    });
+    if (result.error) {
+      setDeleteErrorMessage(result.error);
+      return;
+    }
+    setDeadlines((current) => current.filter((deadline) => deadline.id !== deadlineToDelete.id));
+
+    setDeadlineToDelete(null);
+    setDeleteErrorMessage("");
+    setSuccessMessage("ลบ Deadline สำเร็จ");
   }
 
   useEffect(() => {
@@ -193,13 +238,12 @@ export function ProjectDetailContent({
 
       <ConfirmDeleteModal
         description={deadlineToDelete ? `ต้องการลบ Deadline “${deadlineToDelete.title}” นี้หรือไม่? เมื่อลบแล้วจะไม่สามารถย้อนกลับได้` : ""}
-        onClose={() => setDeadlineToDelete(null)}
-        onConfirm={async () => {
-          if (!deadlineToDelete) return;
-          setDeadlines((current) => current.filter((deadline) => deadline.id !== deadlineToDelete.id));
+        errorMessage={deadlineToDelete ? deleteErrorMessage : ""}
+        onClose={() => {
           setDeadlineToDelete(null);
-          setSuccessMessage("ลบ Deadline สำเร็จ");
+          setDeleteErrorMessage("");
         }}
+        onConfirm={deleteDeadline}
         open={Boolean(deadlineToDelete)}
         title="ยืนยันการลบ Deadline"
       />

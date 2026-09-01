@@ -1,16 +1,10 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { AppContentSection } from "@/components/app-shell";
 import { HomePageClient } from "@/components/home-page-client";
 import { getDocuments, getProjects } from "@/lib/api";
 import type { DocumentExplorerRow } from "@/lib/document-view";
-import { isLocalMockMode } from "@/lib/mock-mode";
 
 export default async function HomePage() {
-  if (isLocalMockMode) {
-    redirect("/project/mock-project");
-  }
-
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
   const projects = await getProjects(cookieHeader);

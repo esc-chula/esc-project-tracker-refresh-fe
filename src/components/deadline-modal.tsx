@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { CancelButton } from "@/components/ui/cancel-button";
 import { FormInput } from "@/components/ui/form-fields";
-import type { DeadlineFormValues, ProjectDeadline } from "@/lib/deadline";
+import { toDeadlineDateInputValue, type DeadlineFormValues, type ProjectDeadline } from "@/lib/deadline";
 
 export function DeadlineModal({
   deadline,
@@ -15,11 +15,11 @@ export function DeadlineModal({
 }: {
   deadline?: ProjectDeadline;
   onClose: () => void;
-  onSave: (values: DeadlineFormValues) => void;
+  onSave: (values: DeadlineFormValues) => Promise<string | undefined>;
   open: boolean;
 }) {
   const [title, setTitle] = useState(deadline?.title ?? "");
-  const [dueDate, setDueDate] = useState(deadline?.dueDate ?? "");
+  const [dueDate, setDueDate] = useState(deadline ? toDeadlineDateInputValue(deadline.dueDate) : "");
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -31,7 +31,13 @@ export function DeadlineModal({
       setErrorMessage("กรุณากรอกชื่อกำหนดการและวันที่ครบกำหนด");
       return;
     }
-    startTransition(() => onSave({ dueDate, title: title.trim() }));
+    setErrorMessage("");
+    startTransition(async () => {
+      const error = await onSave({ dueDate, title: title.trim() });
+      if (error) {
+        setErrorMessage(error);
+      }
+    });
   }
 
   return (
