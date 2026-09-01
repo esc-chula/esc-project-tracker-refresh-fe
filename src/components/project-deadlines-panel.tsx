@@ -24,7 +24,9 @@ export function ProjectDeadlinesPanel({
   onEdit: (deadline: ProjectDeadline) => void;
   permissions: DeadlinePermissions;
 }) {
-  if (!permissions.canRead) return null;
+  const canManageDeadlines = permissions.canCreate || permissions.canUpdate || permissions.canDelete;
+
+  if (!permissions.canRead || (deadlines.length === 0 && !canManageDeadlines)) return null;
 
   return (
     <section aria-labelledby="deadline-heading" className="rounded-[20px] bg-red-50 px-4 py-4 sm:px-5">
