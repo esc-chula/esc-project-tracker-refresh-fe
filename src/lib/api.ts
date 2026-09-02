@@ -17,6 +17,52 @@ export type ProjectPermissions = {
   canManageMembers: boolean;
 };
 
+export type ProjectBudgetSource = {
+  source: "esc" | "sponsor" | "other";
+  allocatedSatang: number;
+  percentage: number;
+};
+
+export type ProjectBudget = {
+  sources: ProjectBudgetSource[];
+  totalSatang: number;
+};
+
+export type FinanceSummaryDocument = {
+  id: string;
+  documentCode: string;
+  name: string;
+  type: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FinanceSummaryProject = {
+  id: string;
+  projectCode: string;
+  name: string;
+  type: string;
+  budget: ProjectBudget;
+  createdAt: string;
+  updatedAt: string;
+  lastDocumentUpdate: string;
+  documents: FinanceSummaryDocument[];
+};
+
+export type FinanceSummaryPagination = {
+  prev: number | null;
+  now: number;
+  next: number | null;
+  last: number;
+};
+
+export type FinanceSummary = {
+  total: number;
+  projects: FinanceSummaryProject[];
+  pagination: FinanceSummaryPagination;
+};
+
 export type Project = {
   id: string;
   ownerUserId: string;
@@ -27,6 +73,7 @@ export type Project = {
   createdAt: string;
   updatedAt: string;
   permissions?: ProjectPermissions;
+  budget?: ProjectBudget;
 };
 
 export type DocumentPermissions = {
@@ -300,6 +347,50 @@ export async function getProjectsClient(input?: { apiBaseURL?: string }): Promis
     return payload.projects ?? [];
   } catch {
     return [];
+  }
+}
+
+export async function getFinanceSummaryClient(input: {
+  search?: string;
+  type?: string;
+  year?: number;
+  sortBy?: "lastDocumentUpdate" | "projectCode" | "projectName";
+  order?: "asc" | "desc";
+  pageNum?: number;
+  pageSize?: 10 | 20 | 50;
+  apiBaseURL?: string;
+}): Promise<{ summary?: FinanceSummary; error?: string }> {
+  const searchParams = new URLSearchParams();
+  if (input.search?.trim()) searchParams.set("search", input.search.trim());
+  if (input.type) searchParams.set("type", input.type);
+  if (input.year) searchParams.set("year", String(input.year));
+  if (input.sortBy) searchParams.set("sortBy", input.sortBy);
+  if (input.order) searchParams.set("order", input.order);
+  if (input.pageNum) searchParams.set("pageNum", String(input.pageNum));
+  if (input.pageSize) searchParams.set("pageSize", String(input.pageSize));
+
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/finance/summary?${searchParams.toString()}`,
+      { cache: "no-store" }
+    );
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถโหลดสรุปงบประมาณได้") };
+    }
+
+    const payload = (await response.json()) as Omit<FinanceSummary, "pagination"> & {
+      pagination?: FinanceSummaryPagination;
+    };
+    return {
+      summary: {
+        total: payload.total ?? 0,
+        projects: payload.projects ?? [],
+        pagination: payload.pagination ?? { last: 1, next: null, now: 1, prev: null }
+      }
+    };
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
   }
 }
 

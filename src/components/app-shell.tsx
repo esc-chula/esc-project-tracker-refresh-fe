@@ -87,6 +87,10 @@ function buildNavItems(pathname: string): AppNavItem[] {
     return [{ label: "เอกสาร" }];
   }
 
+  if (pathname === "/finance-summary") {
+    return [{ label: "สรุปงบ" }];
+  }
+
   if (pathname.startsWith("/project/")) {
     const slug = decodeURIComponent(pathname.slice("/project/".length));
 
