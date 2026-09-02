@@ -9,11 +9,11 @@ type ProfileAvatarProps = {
 };
 
 export function ProfileAvatar({ role, className }: ProfileAvatarProps) {
-  const isAdmin = role === "admin";
+  const usesStaffIcon = role === "secretary" || role === "finance";
 
   return (
     <div className={cn("relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full", className)}>
-      <Image alt="" className="h-full w-full object-contain" fill sizes="56px" src={isAdmin ? "/icons/admin-profile.svg" : "/icons/circle-user-round.svg"} />
+      <Image alt="" className="h-full w-full object-contain" fill sizes="56px" src={usesStaffIcon ? "/icons/admin-profile.svg" : "/icons/circle-user-round.svg"} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { documentTypeOptions, projectTypeOptions } from "@/lib/catalog";
+import type { DeadlinePermissions, ProjectDeadline } from "@/lib/deadline";
 
 export type CurrentUser = {
   id: string;
@@ -163,6 +164,12 @@ export type ProjectMember = {
   email: string;
   displayName: string;
   permission: string;
+};
+
+export type ProjectDeadlinesResult = {
+  deadlines: ProjectDeadline[];
+  permissions: DeadlinePermissions;
+  error?: string;
 };
 
 export type FilingTimelineEvent = {
@@ -415,6 +422,114 @@ export async function getProjectById(cookieHeader: string, projectId: string): P
     return payload.project ?? null;
   } catch {
     return null;
+  }
+}
+
+const noDeadlinePermissions: DeadlinePermissions = {
+  canCreate: false,
+  canDelete: false,
+  canRead: false,
+  canUpdate: false
+};
+
+function emptyProjectDeadlinesResult(error?: string): ProjectDeadlinesResult {
+  return { deadlines: [], permissions: noDeadlinePermissions, ...(error ? { error } : {}) };
+}
+
+function toDeadlineRequestDateTime(dueDate: string): string {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dueDate) ? `${dueDate}T00:00:00.000Z` : dueDate;
+}
+
+export async function getProjectDeadlines(cookieHeader: string, projectId: string): Promise<ProjectDeadlinesResult> {
+  if (!cookieHeader || !projectId) {
+    return emptyProjectDeadlinesResult();
+  }
+
+  try {
+    const response = await fetch(`${apiBaseURL}/api/v1/projects/${projectId}/deadlines`, {
+      cache: "no-store",
+      headers: { Cookie: cookieHeader }
+    });
+    if (!response.ok) {
+      return emptyProjectDeadlinesResult();
+    }
+    const payload = (await response.json()) as Partial<ProjectDeadlinesResult>;
+    return {
+      deadlines: payload.deadlines ?? [],
+      permissions: payload.permissions ?? noDeadlinePermissions
+    };
+  } catch {
+    return emptyProjectDeadlinesResult();
+  }
+}
+
+export async function createProjectDeadline(input: {
+  apiBaseURL?: string;
+  projectId: string;
+  title: string;
+  dueDate: string;
+}): Promise<{ deadline?: ProjectDeadline; error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(`${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/deadlines`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dueDate: toDeadlineRequestDateTime(input.dueDate), title: input.title })
+    });
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถเพิ่ม Deadline ได้") };
+    }
+    const payload = (await response.json()) as { deadline?: ProjectDeadline };
+    return { deadline: payload.deadline };
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function updateProjectDeadline(input: {
+  apiBaseURL?: string;
+  projectId: string;
+  deadlineId: string;
+  title: string;
+  dueDate: string;
+}): Promise<{ deadline?: ProjectDeadline; error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/deadlines/${input.deadlineId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dueDate: toDeadlineRequestDateTime(input.dueDate), title: input.title })
+      }
+    );
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถแก้ไข Deadline ได้") };
+    }
+    const payload = (await response.json()) as { deadline?: ProjectDeadline };
+    return { deadline: payload.deadline };
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function deleteProjectDeadline(input: {
+  apiBaseURL?: string;
+  projectId: string;
+  deadlineId: string;
+}): Promise<{ error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/deadlines/${input.deadlineId}`,
+      { method: "DELETE" }
+    );
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถลบ Deadline ได้") };
+    }
+    return {};
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
   }
 }
 
@@ -750,6 +865,38 @@ export async function updateProject(input: {
       const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
       return { error: getAPIErrorMessage(payload, "ไม่สามารถแก้ไขโครงการได้") };
     }
+    return (await response.json()) as { project?: Project };
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function updateProjectBudget(input: {
+  apiBaseURL?: string;
+  projectId: string;
+  escSatang: number;
+  otherSatang: number;
+  sponsorSatang: number;
+}): Promise<{ project?: Project; error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/budget`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          escSatang: input.escSatang,
+          otherSatang: input.otherSatang,
+          sponsorSatang: input.sponsorSatang
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถบันทึกงบประมาณได้") };
+    }
+
     return (await response.json()) as { project?: Project };
   } catch {
     return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };

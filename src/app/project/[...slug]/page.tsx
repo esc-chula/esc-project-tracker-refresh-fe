@@ -8,6 +8,7 @@ import {
   getCurrentUser,
   getDocumentByCode,
   getGoogleLoginURL,
+  getProjectDeadlines,
   getProjects
 } from "@/lib/api";
 
@@ -109,11 +110,14 @@ export default async function ProjectPage({
     notFound();
   }
 
+  const deadlineResult = await getProjectDeadlines(cookieHeader, project.id);
+
   return (
     <AppContentSection>
       <ProjectDetailContent
         apiBaseURL={apiBaseURL}
-        currentUser={currentUser}
+        initialDeadlinePermissions={deadlineResult.permissions}
+        initialDeadlines={deadlineResult.deadlines}
         initialDocuments={[]}
         initialProject={project}
       />
