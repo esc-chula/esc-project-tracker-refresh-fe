@@ -8,9 +8,16 @@ import { FormModalShell } from "@/components/ui/form-modal-shell";
 import { FormInput } from "@/components/ui/form-fields";
 import { FormModalActions } from "@/components/ui/form-modal-actions";
 
+export type ProjectBudgetValues = {
+  escSatang: number;
+  otherSatang: number;
+  sponsorSatang: number;
+};
+
 type ProjectPopupModalProps = {
   apiBaseURL: string;
-  onBudgetUpdated?: () => void;
+  budget: ProjectBudgetValues;
+  onBudgetUpdated?: (budget: ProjectBudgetValues) => void;
   onClose: () => void;
   open: boolean;
   projectId: string;
@@ -37,6 +44,10 @@ function toSatang(value: string) {
   return Math.round(parseBudgetValue(value) * 100);
 }
 
+function fromSatang(value: number) {
+  return value > 0 ? String(value / 100) : "";
+}
+
 function formatBudget(value: number) {
   return value.toLocaleString("th-TH", {
     maximumFractionDigits: 2,
@@ -46,6 +57,7 @@ function formatBudget(value: number) {
 
 export function ProjectPopupModal({
   apiBaseURL,
+  budget,
   onBudgetUpdated,
   onClose,
   open,
@@ -61,6 +73,7 @@ export function ProjectPopupModal({
       <div className="flex flex-col">
         <BudgetInput
           apiBaseURL={apiBaseURL}
+          budget={budget}
           onBudgetUpdated={onBudgetUpdated}
           onCancel={onClose}
           projectId={projectId}
@@ -72,18 +85,20 @@ export function ProjectPopupModal({
 
 function BudgetInput({
   apiBaseURL,
+  budget,
   onBudgetUpdated,
   onCancel,
   projectId
 }: {
   apiBaseURL: string;
-  onBudgetUpdated?: () => void;
+  budget: ProjectBudgetValues;
+  onBudgetUpdated?: (budget: ProjectBudgetValues) => void;
   onCancel: () => void;
   projectId: string;
 }) {
-  const [activityBudget, setActivityBudget] = useState("");
-  const [sponsorBudget, setSponsorBudget] = useState("");
-  const [otherBudget, setOtherBudget] = useState("");
+  const [activityBudget, setActivityBudget] = useState(() => fromSatang(budget.escSatang));
+  const [sponsorBudget, setSponsorBudget] = useState(() => fromSatang(budget.sponsorSatang));
+  const [otherBudget, setOtherBudget] = useState(() => fromSatang(budget.otherSatang));
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalBudget =
@@ -95,14 +110,17 @@ function BudgetInput({
     event.preventDefault();
     setErrorMessage("");
     setIsSubmitting(true);
+    const nextBudget = {
+      escSatang: toSatang(activityBudget),
+      sponsorSatang: toSatang(sponsorBudget),
+      otherSatang: toSatang(otherBudget)
+    };
 
     try {
       const result = await updateProjectBudget({
         apiBaseURL,
         projectId,
-        escSatang: toSatang(activityBudget),
-        sponsorSatang: toSatang(sponsorBudget),
-        otherSatang: toSatang(otherBudget)
+        ...nextBudget
       });
 
       if (result.error) {
@@ -110,7 +128,7 @@ function BudgetInput({
         return;
       }
 
-      onBudgetUpdated?.();
+      onBudgetUpdated?.(nextBudget);
       onCancel();
     } finally {
       setIsSubmitting(false);

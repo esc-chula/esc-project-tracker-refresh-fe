@@ -25,6 +25,9 @@ export type Project = {
   name: string;
   type: string;
   status: string;
+  escSatang?: number;
+  otherSatang?: number;
+  sponsorSatang?: number;
   createdAt: string;
   updatedAt: string;
   permissions?: ProjectPermissions;
