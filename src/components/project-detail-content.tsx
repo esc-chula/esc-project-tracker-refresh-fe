@@ -179,8 +179,14 @@ export function ProjectDetailContent({
       />
 
       <ProjectPopupModal
+        apiBaseURL={apiBaseURL}
+        onBudgetUpdated={() => {
+          setSuccessMessage("บันทึกงบประมาณสำเร็จ");
+          router.refresh();
+        }}
         onClose={() => setIsProjectPopupOpen(false)}
         open={isProjectPopupOpen}
+        projectId={project.id}
         projectName={project.name}
       />
 

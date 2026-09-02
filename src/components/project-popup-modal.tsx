@@ -1,14 +1,19 @@
 "use client";
 
+import type { FormEvent } from "react";
 import { useState } from "react";
 import Image from "next/image";
+import { updateProjectBudget } from "@/lib/api";
 import { FormModalShell } from "@/components/ui/form-modal-shell";
 import { FormInput } from "@/components/ui/form-fields";
 import { FormModalActions } from "@/components/ui/form-modal-actions";
 
 type ProjectPopupModalProps = {
+  apiBaseURL: string;
+  onBudgetUpdated?: () => void;
   onClose: () => void;
   open: boolean;
+  projectId: string;
   projectName: string;
 };
 
@@ -28,6 +33,10 @@ function parseBudgetValue(value: string) {
   return Number(value) || 0;
 }
 
+function toSatang(value: string) {
+  return Math.round(parseBudgetValue(value) * 100);
+}
+
 function formatBudget(value: number) {
   return value.toLocaleString("th-TH", {
     maximumFractionDigits: 2,
@@ -35,7 +44,14 @@ function formatBudget(value: number) {
   });
 }
 
-export function ProjectPopupModal({ onClose, open, projectName }: ProjectPopupModalProps) {
+export function ProjectPopupModal({
+  apiBaseURL,
+  onBudgetUpdated,
+  onClose,
+  open,
+  projectId,
+  projectName
+}: ProjectPopupModalProps) {
   if (!open) {
     return null;
   }
@@ -43,31 +59,70 @@ export function ProjectPopupModal({ onClose, open, projectName }: ProjectPopupMo
   return (
     <FormModalShell onClose={onClose} subtitle={projectName} title="แก้ไขงบประมาณ">
       <div className="flex flex-col">
-        <BudgetInput onCancel={onClose} />
+        <BudgetInput
+          apiBaseURL={apiBaseURL}
+          onBudgetUpdated={onBudgetUpdated}
+          onCancel={onClose}
+          projectId={projectId}
+        />
       </div>
     </FormModalShell>
   );
 }
 
-function BudgetInput({ onCancel }: { onCancel: () => void }) {
+function BudgetInput({
+  apiBaseURL,
+  onBudgetUpdated,
+  onCancel,
+  projectId
+}: {
+  apiBaseURL: string;
+  onBudgetUpdated?: () => void;
+  onCancel: () => void;
+  projectId: string;
+}) {
   const [activityBudget, setActivityBudget] = useState("");
   const [sponsorBudget, setSponsorBudget] = useState("");
   const [otherBudget, setOtherBudget] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalBudget =
     parseBudgetValue(activityBudget) +
     parseBudgetValue(sponsorBudget) +
     parseBudgetValue(otherBudget);
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await updateProjectBudget({
+        apiBaseURL,
+        projectId,
+        escSatang: toSatang(activityBudget),
+        sponsorSatang: toSatang(sponsorBudget),
+        otherSatang: toSatang(otherBudget)
+      });
+
+      if (result.error) {
+        setErrorMessage(result.error);
+        return;
+      }
+
+      onBudgetUpdated?.();
+      onCancel();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
-    <form
-      className="space-y-4"
-      onSubmit={(event) => {
-        event.preventDefault();
-      }}
-    >
+    <form className="space-y-4" onSubmit={handleSubmit}>
       <label className="block space-y-2">
         <span className="text-[16px] font-normal text-black">งบกิจการนิสิต</span>
         <FormInput
+          disabled={isSubmitting}
           inputMode="decimal"
           onChange={(event) => setActivityBudget(sanitizeBudgetInput(event.target.value))}
           placeholder="กรอกจำนวนเงิน"
@@ -78,6 +133,7 @@ function BudgetInput({ onCancel }: { onCancel: () => void }) {
       <label className="block space-y-2">
         <span className="text-[16px] font-normal text-black">งบสปอนเซอร์</span>
         <FormInput
+          disabled={isSubmitting}
           inputMode="decimal"
           onChange={(event) => setSponsorBudget(sanitizeBudgetInput(event.target.value))}
           placeholder="กรอกจำนวนเงิน"
@@ -88,6 +144,7 @@ function BudgetInput({ onCancel }: { onCancel: () => void }) {
       <label className="block space-y-2">
         <span className="text-[16px] font-normal text-black">งบอื่นๆ</span>
         <FormInput
+          disabled={isSubmitting}
           inputMode="decimal"
           onChange={(event) => setOtherBudget(sanitizeBudgetInput(event.target.value))}
           placeholder="กรอกจำนวนเงิน"
@@ -100,9 +157,13 @@ function BudgetInput({ onCancel }: { onCancel: () => void }) {
         <span className="text-[20px] text-red-700">฿ {formatBudget(totalBudget)}</span>
       </div>
       <FormModalActions
+        errorMessage={errorMessage}
+        isSubmitting={isSubmitting}
         onCancel={onCancel}
+        submitDisabled={isSubmitting}
         submitIcon={<Image alt="" height={20} src="/icons/save-as.svg" width={20} />}
         submitLabel="บันทึกงบประมาณ"
+        submittingLabel="กำลังบันทึก..."
       />
     </form>
   );
