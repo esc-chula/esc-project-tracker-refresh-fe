@@ -665,6 +665,38 @@ export async function updateProject(input: {
   }
 }
 
+export async function updateProjectBudget(input: {
+  apiBaseURL?: string;
+  projectId: string;
+  escSatang: number;
+  otherSatang: number;
+  sponsorSatang: number;
+}): Promise<{ project?: Project; error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/budget`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          escSatang: input.escSatang,
+          otherSatang: input.otherSatang,
+          sponsorSatang: input.sponsorSatang
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถบันทึกงบประมาณได้") };
+    }
+
+    return (await response.json()) as { project?: Project };
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
 export async function deleteProject(input: { apiBaseURL?: string; id: string }): Promise<{ error?: string }> {
   try {
     const response = await fetchWithSessionRetry(`${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.id}`, {
