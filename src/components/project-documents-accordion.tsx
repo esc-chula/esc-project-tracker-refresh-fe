@@ -115,8 +115,9 @@ export function ProjectDocumentsAccordion({
 
         {items.map(({ documents, project }) => {
           const isOpen = openProjectIds.has(project.id);
-          const isSelected =
-            (allProjectsSelected && !excludedProjectIds.has(project.id)) || selectedProjectIds.has(project.id);
+          const isSelected = allProjectsSelected
+            ? !excludedProjectIds.has(project.id)
+            : selectedProjectIds.has(project.id);
           const totalBudget = project.activityBudget + project.sponsorBudget + project.otherBudget;
 
           return (
