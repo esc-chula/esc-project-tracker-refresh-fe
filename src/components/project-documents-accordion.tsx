@@ -23,8 +23,12 @@ export type ProjectDocumentsAccordionItem = {
 };
 
 type ProjectDocumentsAccordionProps = {
+  allProjectsSelected: boolean;
+  excludedProjectIds: Set<string>;
   items: ProjectDocumentsAccordionItem[];
-  onSelectedProjectIdsChange: (selectedProjectIds: Set<string>) => void;
+  onAllProjectsSelectedChange: (allProjectsSelected: boolean) => void;
+  onExcludedProjectIdsChange: (excludedProjectIds: Set<string>) => void;
+  onSelectedProjectIdsChange: (selectedProjectIds: Set<string>, selectionMode: "all" | "custom") => void;
   selectedProjectIds: Set<string>;
 };
 
@@ -56,11 +60,26 @@ function toggleSelectedProjectId(currentSelectedProjectIds: Set<string>, project
   return nextSelectedProjectIds;
 }
 
-export function ProjectDocumentsAccordion({ items, onSelectedProjectIdsChange, selectedProjectIds }: ProjectDocumentsAccordionProps) {
-  const [openProjectIds, setOpenProjectIds] = useState<Set<string>>(() => new Set([items[0]?.project.id].filter(Boolean)));
-  const isAllVisibleProjectsSelected = items.length > 0 && items.every(({ project }) => selectedProjectIds.has(project.id));
+export function ProjectDocumentsAccordion({
+  allProjectsSelected,
+  excludedProjectIds,
+  items,
+  onAllProjectsSelectedChange,
+  onExcludedProjectIdsChange,
+  onSelectedProjectIdsChange,
+  selectedProjectIds
+}: ProjectDocumentsAccordionProps) {
+  const [openProjectIds, setOpenProjectIds] = useState<Set<string>>(() => new Set());
+  const isAllVisibleProjectsSelected =
+    (allProjectsSelected && items.every(({ project }) => !excludedProjectIds.has(project.id))) ||
+    (items.length > 0 && items.every(({ project }) => selectedProjectIds.has(project.id)));
 
   function toggleAllVisibleProjects() {
+    if (allProjectsSelected) {
+      onAllProjectsSelectedChange(false);
+      return;
+    }
+
     const nextSelectedProjectIds = new Set(selectedProjectIds);
 
     if (isAllVisibleProjectsSelected) {
@@ -69,7 +88,7 @@ export function ProjectDocumentsAccordion({ items, onSelectedProjectIdsChange, s
       items.forEach(({ project }) => nextSelectedProjectIds.add(project.id));
     }
 
-    onSelectedProjectIdsChange(nextSelectedProjectIds);
+    onSelectedProjectIdsChange(nextSelectedProjectIds, isAllVisibleProjectsSelected ? "custom" : "all");
   }
 
   return (
@@ -96,7 +115,8 @@ export function ProjectDocumentsAccordion({ items, onSelectedProjectIdsChange, s
 
         {items.map(({ documents, project }) => {
           const isOpen = openProjectIds.has(project.id);
-          const isSelected = selectedProjectIds.has(project.id);
+          const isSelected =
+            (allProjectsSelected && !excludedProjectIds.has(project.id)) || selectedProjectIds.has(project.id);
           const totalBudget = project.activityBudget + project.sponsorBudget + project.otherBudget;
 
           return (
@@ -112,7 +132,14 @@ export function ProjectDocumentsAccordion({ items, onSelectedProjectIdsChange, s
                     aria-label={`เลือกโครงการ ${project.projectCode}`}
                     className="h-4 w-4 rounded border-gray-300 accent-red-700"
                     checked={isSelected}
-                    onChange={() => onSelectedProjectIdsChange(toggleSelectedProjectId(selectedProjectIds, project.id))}
+                    onChange={() => {
+                      if (allProjectsSelected) {
+                        onExcludedProjectIdsChange(toggleSelectedProjectId(excludedProjectIds, project.id));
+                        return;
+                      }
+
+                      onSelectedProjectIdsChange(toggleSelectedProjectId(selectedProjectIds, project.id), "custom");
+                    }}
                     type="checkbox"
                   />
                 </div>

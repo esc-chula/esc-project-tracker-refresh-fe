@@ -77,6 +77,9 @@ export default function FinanceSummaryPage() {
   const [pageSize, setPageSize] = useState<(typeof pageSizeOptions)[number]>(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProjectIds, setSelectedProjectIds] = useState<Set<string>>(() => new Set());
+  const [excludedProjectIds, setExcludedProjectIds] = useState<Set<string>>(() => new Set());
+  const [projectsById, setProjectsById] = useState<Map<string, FinanceSummaryProject>>(() => new Map());
+  const [selectionMode, setSelectionMode] = useState<"all" | "custom">("custom");
   const [hasSelectionOverride, setHasSelectionOverride] = useState(false);
   const [yearBudget, setYearBudget] = useState<ProjectBudget | null>(null);
 
@@ -99,13 +102,20 @@ export default function FinanceSummaryPage() {
           setProjects([]);
           setTotalProjects(0);
           setSelectedProjectIds(new Set());
+          setExcludedProjectIds(new Set());
+          setProjectsById(new Map());
+          setSelectionMode("custom");
           setHasSelectionOverride(false);
           setError(result.error ?? "ไม่สามารถโหลดสรุปงบประมาณได้");
         } else {
-          setProjects(result.summary.projects);
-          setTotalProjects(result.summary.total);
-          setSelectedProjectIds(new Set(result.summary.projects.map((project) => project.id)));
-          setHasSelectionOverride(false);
+          const summary = result.summary;
+          setProjects(summary.projects);
+          setTotalProjects(summary.total);
+          setProjectsById((currentProjectsById) => {
+            const nextProjectsById = new Map(currentProjectsById);
+            summary.projects.forEach((project) => nextProjectsById.set(project.id, project));
+            return nextProjectsById;
+          });
         }
         setIsLoading(false);
       });
@@ -135,21 +145,49 @@ export default function FinanceSummaryPage() {
     setCurrentPage(1);
   }, [academicYear, pageSize, query, selectedTypes, sortBy, sortDirection]);
 
+  useEffect(() => {
+    setSelectedProjectIds(new Set());
+    setExcludedProjectIds(new Set());
+    setProjectsById(new Map());
+    setSelectionMode("custom");
+    setHasSelectionOverride(false);
+  }, [academicYear, query, selectedTypes]);
+
   const accordionItems = useMemo(() => createItems(projects), [projects]);
-  const selectedItems = useMemo(
-    () => accordionItems.filter(({ project }) => selectedProjectIds.has(project.id)),
-    [accordionItems, selectedProjectIds]
+  const selectedProjects = useMemo(
+    () => Array.from(selectedProjectIds, (projectId) => projectsById.get(projectId)).filter((project): project is FinanceSummaryProject => Boolean(project)),
+    [projectsById, selectedProjectIds]
+  );
+  const excludedProjects = useMemo(
+    () => Array.from(excludedProjectIds, (projectId) => projectsById.get(projectId)).filter((project): project is FinanceSummaryProject => Boolean(project)),
+    [excludedProjectIds, projectsById]
   );
   const selectedBudgetData = useMemo<BudgetItem[]>(
     () => [
-      { category: "studentAffairs", amount: selectedItems.reduce((total, { project }) => total + project.activityBudget, 0) },
-      { category: "sponsor", amount: selectedItems.reduce((total, { project }) => total + project.sponsorBudget, 0) },
-      { category: "others", amount: selectedItems.reduce((total, { project }) => total + project.otherBudget, 0) }
+      { category: "studentAffairs", amount: selectedProjects.reduce((total, project) => total + budgetAmount(project, "esc"), 0) },
+      { category: "sponsor", amount: selectedProjects.reduce((total, project) => total + budgetAmount(project, "sponsor"), 0) },
+      { category: "others", amount: selectedProjects.reduce((total, project) => total + budgetAmount(project, "other"), 0) }
     ],
-    [selectedItems]
+    [selectedProjects]
   );
-  const isDefaultYearSummary = !query.trim() && selectedTypes.length === 0 && !hasSelectionOverride;
-  const donutData = isDefaultYearSummary && yearBudget ? budgetToChartData(yearBudget) : selectedBudgetData;
+  const shouldShowYearDashboard =
+    !query.trim() && selectedTypes.length === 0 && (selectedProjectIds.size === 0 || selectionMode === "all");
+  const allSelectedBudgetData = useMemo<BudgetItem[]>(() => {
+    if (!yearBudget) return [];
+
+    return budgetToChartData(yearBudget).map((item) => {
+      const source = item.category === "studentAffairs" ? "esc" : item.category === "sponsor" ? "sponsor" : "other";
+      const excludedAmount = excludedProjects.reduce((total, project) => total + budgetAmount(project, source), 0);
+      return { ...item, amount: Math.max(0, item.amount - excludedAmount) };
+    });
+  }, [excludedProjects, yearBudget]);
+  const selectedProjectCount = selectionMode === "all" ? totalProjects - excludedProjectIds.size : selectedProjectIds.size;
+  const donutData =
+    shouldShowYearDashboard && yearBudget
+      ? selectionMode === "all"
+        ? allSelectedBudgetData
+        : budgetToChartData(yearBudget)
+      : selectedBudgetData;
   const totalBudget = donutData.reduce((total, item) => total + item.amount, 0);
 
   return (
@@ -179,13 +217,15 @@ export default function FinanceSummaryPage() {
             <BudgetDonutChart data={donutData} totalAmount={totalBudget} />
           </div>
 
-          {hasSelectionOverride && selectedProjectIds.size > 0 ? (
+          {hasSelectionOverride && selectedProjectCount > 0 ? (
             <div className="mx-auto mt-3 flex max-w-sm items-center justify-between rounded-full border border-red-200 bg-red-50 px-5 py-3 text-sm">
-              <span>เลือกแล้ว {selectedProjectIds.size} โครงการ</span>
+              <span>เลือกแล้ว {selectedProjectCount} โครงการ</span>
               <button
                 className="font-medium text-red-700 hover:underline"
                 onClick={() => {
                   setSelectedProjectIds(new Set());
+                  setExcludedProjectIds(new Set());
+                  setSelectionMode("custom");
                   setHasSelectionOverride(true);
                 }}
                 type="button"
@@ -236,9 +276,20 @@ export default function FinanceSummaryPage() {
         {!isLoading && !error && accordionItems.length > 0 ? (
           <div className="space-y-4 overflow-x-auto">
             <ProjectDocumentsAccordion
+              allProjectsSelected={selectionMode === "all"}
+              excludedProjectIds={excludedProjectIds}
               items={accordionItems}
-              onSelectedProjectIdsChange={(projectIds) => {
+              onAllProjectsSelectedChange={(allProjectsSelected) => {
+                setSelectedProjectIds(new Set());
+                setExcludedProjectIds(new Set());
+                setSelectionMode(allProjectsSelected ? "all" : "custom");
+                setHasSelectionOverride(true);
+              }}
+              onExcludedProjectIdsChange={setExcludedProjectIds}
+              onSelectedProjectIdsChange={(projectIds, nextSelectionMode) => {
                 setSelectedProjectIds(projectIds);
+                setExcludedProjectIds(new Set());
+                setSelectionMode(nextSelectionMode);
                 setHasSelectionOverride(true);
               }}
               selectedProjectIds={selectedProjectIds}
