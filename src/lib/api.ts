@@ -64,6 +64,10 @@ export type FinanceSummary = {
   pagination: FinanceSummaryPagination;
 };
 
+export type FinanceDashboard = {
+  budget: ProjectBudget;
+};
+
 export type Project = {
   id: string;
   ownerUserId: string;
@@ -396,6 +400,32 @@ export async function getFinanceSummaryClient(input: {
         pagination: payload.pagination ?? { last: 1, next: null, now: 1, prev: null }
       }
     };
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function getFinanceDashboardClient(input: {
+  year: number;
+  apiBaseURL?: string;
+}): Promise<{ dashboard?: FinanceDashboard; error?: string }> {
+  const searchParams = new URLSearchParams({ year: String(input.year) });
+
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/finance/dashboard?${searchParams.toString()}`,
+      { cache: "no-store" }
+    );
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถโหลดภาพรวมงบประมาณได้") };
+    }
+
+    const payload = (await response.json()) as { budget?: ProjectBudget };
+    if (!payload.budget) {
+      return { error: "ไม่พบข้อมูลงบประมาณ" };
+    }
+    return { dashboard: { budget: payload.budget } };
   } catch {
     return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
   }
