@@ -13,7 +13,6 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSearchBar } from "@/components/ui/page-search-bar";
 import { SortControls, type SortDirection, type SortOption } from "@/components/ui/sort-controls";
 import {
-  getFinanceDashboardClient,
   getFinanceSummaryClient,
   type ProjectBudget,
   type FinanceSummaryProject
@@ -31,12 +30,12 @@ const sortOptions = [
 ] satisfies readonly SortOption<SummarySortKey>[];
 
 function budgetAmount(project: FinanceSummaryProject, source: "esc" | "sponsor" | "other") {
-  return (project.budget.sources.find((item) => item.source === source)?.allocatedSatang ?? 0) / 100;
+  return (project.budget.sources?.find((item) => item.source === source)?.allocatedSatang ?? 0) / 100;
 }
 
 function budgetToChartData(budget: ProjectBudget): BudgetItem[] {
   const sourceAmount = (source: "esc" | "sponsor" | "other") =>
-    (budget.sources.find((item) => item.source === source)?.allocatedSatang ?? 0) / 100;
+    (budget.sources?.find((item) => item.source === source)?.allocatedSatang ?? 0) / 100;
 
   return [
     { category: "studentAffairs", amount: sourceAmount("esc") },
@@ -81,7 +80,7 @@ export default function FinanceSummaryPage() {
   const [projectsById, setProjectsById] = useState<Map<string, FinanceSummaryProject>>(() => new Map());
   const [selectionMode, setSelectionMode] = useState<"all" | "custom">("custom");
   const [hasSelectionOverride, setHasSelectionOverride] = useState(false);
-  const [yearBudget, setYearBudget] = useState<ProjectBudget | null>(null);
+  const [summaryBudget, setSummaryBudget] = useState<ProjectBudget | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -104,6 +103,7 @@ export default function FinanceSummaryPage() {
           setSelectedProjectIds(new Set());
           setExcludedProjectIds(new Set());
           setProjectsById(new Map());
+          setSummaryBudget(null);
           setSelectionMode("custom");
           setHasSelectionOverride(false);
           setError(result.error ?? "ไม่สามารถโหลดสรุปงบประมาณได้");
@@ -111,6 +111,7 @@ export default function FinanceSummaryPage() {
           const summary = result.summary;
           setProjects(summary.projects);
           setTotalProjects(summary.total);
+          setSummaryBudget(summary.budget);
           setProjectsById((currentProjectsById) => {
             const nextProjectsById = new Map(currentProjectsById);
             summary.projects.forEach((project) => nextProjectsById.set(project.id, project));
@@ -127,19 +128,6 @@ export default function FinanceSummaryPage() {
       window.clearTimeout(timeout);
     };
   }, [academicYear, currentPage, pageSize, query, selectedTypes, sortBy, sortDirection]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void getFinanceDashboardClient({ year: academicYear }).then((result) => {
-      if (!cancelled) {
-        setYearBudget(result.dashboard?.budget ?? null);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [academicYear]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -171,22 +159,22 @@ export default function FinanceSummaryPage() {
     [selectedProjects]
   );
   const shouldShowYearDashboard =
-    !query.trim() && selectedTypes.length === 0 && (selectedProjectIds.size === 0 || selectionMode === "all");
+    selectedProjectIds.size === 0 || selectionMode === "all";
   const allSelectedBudgetData = useMemo<BudgetItem[]>(() => {
-    if (!yearBudget) return [];
+    if (!summaryBudget) return [];
 
-    return budgetToChartData(yearBudget).map((item) => {
+    return budgetToChartData(summaryBudget).map((item) => {
       const source = item.category === "studentAffairs" ? "esc" : item.category === "sponsor" ? "sponsor" : "other";
       const excludedAmount = excludedProjects.reduce((total, project) => total + budgetAmount(project, source), 0);
       return { ...item, amount: Math.max(0, item.amount - excludedAmount) };
     });
-  }, [excludedProjects, yearBudget]);
+  }, [excludedProjects, summaryBudget]);
   const selectedProjectCount = selectionMode === "all" ? totalProjects - excludedProjectIds.size : selectedProjectIds.size;
   const donutData =
-    shouldShowYearDashboard && yearBudget
+    shouldShowYearDashboard && summaryBudget
       ? selectionMode === "all"
         ? allSelectedBudgetData
-        : budgetToChartData(yearBudget)
+        : budgetToChartData(summaryBudget)
       : selectedBudgetData;
   const totalBudget = donutData.reduce((total, item) => total + item.amount, 0);
 

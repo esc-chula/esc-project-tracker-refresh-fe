@@ -25,7 +25,7 @@ export type ProjectBudgetSource = {
 };
 
 export type ProjectBudget = {
-  sources: ProjectBudgetSource[];
+  sources: ProjectBudgetSource[] | null;
   totalSatang: number;
 };
 
@@ -59,6 +59,7 @@ export type FinanceSummaryPagination = {
 };
 
 export type FinanceSummary = {
+  budget: ProjectBudget;
   total: number;
   projects: FinanceSummaryProject[];
   pagination: FinanceSummaryPagination;
@@ -395,6 +396,7 @@ export async function getFinanceSummaryClient(input: {
     };
     return {
       summary: {
+        budget: payload.budget ?? { sources: [], totalSatang: 0 },
         total: payload.total ?? 0,
         projects: payload.projects ?? [],
         pagination: payload.pagination ?? { last: 1, next: null, now: 1, prev: null }
