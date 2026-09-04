@@ -43,6 +43,7 @@ export function DocumentsExplorer({
   createButtonLabel,
   onCreateClick,
   afterFiltersContent,
+  afterDocumentsContent,
   leadingAction,
   hideProjectTypeFilter = false,
   recentItems = [],
@@ -57,6 +58,7 @@ export function DocumentsExplorer({
   createButtonLabel?: string;
   onCreateClick?: () => void;
   afterFiltersContent?: React.ReactNode;
+  afterDocumentsContent?: React.ReactNode;
   leadingAction?: React.ReactNode;
   hideProjectTypeFilter?: boolean;
   recentItems?: RecentItem[];
@@ -229,6 +231,7 @@ export function DocumentsExplorer({
             totalItems={filteredDocuments.length}
           />
         ) : null}
+        {afterDocumentsContent ? <div>{afterDocumentsContent}</div> : null}
       </div>
     </div>
   );

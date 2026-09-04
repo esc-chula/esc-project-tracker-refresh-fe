@@ -15,9 +15,10 @@ import { DocumentsExplorer } from "@/components/documents-explorer";
 import { ManageProjectMembersModal } from "@/components/manage-project-members-modal";
 import { NewDocumentModal } from "@/components/new-document-modal";
 import { NewProjectModal } from "@/components/new-project-modal";
-import { ProjectPopupModal } from "@/components/project-popup-modal";
+import { ProjectPopupModal, type ProjectBudgetValues } from "@/components/project-popup-modal";
 import { DeadlineModal } from "@/components/deadline-modal";
 import { ProjectDeadlinesPanel } from "@/components/project-deadlines-panel";
+import { BudgetDonutChart, type BudgetItem } from "@/components/budget-donut-chart";
 import { ActionSuccessPopup } from "@/components/ui/action-success-popup";
 import { Button } from "@/components/ui/button";
 import { ProjectIcon } from "@/components/ui/document-action-icons";
@@ -26,6 +27,14 @@ import type { DocumentExplorerRow } from "@/lib/document-view";
 import { getRecentItems, saveRecentItem, type RecentItem } from "@/lib/recent-items";
 import { buildGlobalSearchItems } from "@/lib/search-items";
 import type { DeadlineFormValues, DeadlinePermissions, ProjectDeadline } from "@/lib/deadline";
+
+function getProjectBudgetValues(project: Project): ProjectBudgetValues {
+  return {
+    escSatang: project.escSatang ?? 0,
+    otherSatang: project.otherSatang ?? 0,
+    sponsorSatang: project.sponsorSatang ?? 0
+  };
+}
 
 export function ProjectDetailContent({
   apiBaseURL,
@@ -42,6 +51,7 @@ export function ProjectDetailContent({
 }) {
   const router = useRouter();
   const [project, setProject] = useState(initialProject);
+  const [projectBudget, setProjectBudget] = useState<ProjectBudgetValues>(() => getProjectBudgetValues(initialProject));
   const [documents, setDocuments] = useState(initialDocuments);
   const [isDocumentsLoading, setIsDocumentsLoading] = useState(initialDocuments.length === 0);
   const [isDocumentModalOpen, setIsDocumentModalOpen] = useState(false);
@@ -164,10 +174,28 @@ export function ProjectDetailContent({
     () => buildGlobalSearchItems({ projects: [project], documents: documentRows }),
     [documentRows, project]
   );
+  const budgetChartData = useMemo<BudgetItem[]>(
+    () => [
+      { category: "studentAffairs", amount: projectBudget.escSatang / 100 },
+      { category: "sponsor", amount: projectBudget.sponsorSatang / 100 },
+      { category: "others", amount: projectBudget.otherSatang / 100 }
+    ],
+    [projectBudget.escSatang, projectBudget.otherSatang, projectBudget.sponsorSatang]
+  );
+  const totalBudgetAmount =
+    (projectBudget.escSatang + projectBudget.sponsorSatang + projectBudget.otherSatang) / 100;
 
   return (
     <>
       <DocumentsExplorer
+        afterDocumentsContent={
+          <BudgetDonutChart
+            canEdit
+            data={budgetChartData}
+            onEditClick={() => setIsProjectPopupOpen(true)}
+            totalAmount={totalBudgetAmount}
+          />
+        }
         afterFiltersContent={
           <div className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -206,9 +234,6 @@ export function ProjectDetailContent({
                 จัดการผู้เข้าถึง
               </Button>
             ) : null}
-            <Button onClick={() => setIsProjectPopupOpen(true)} type="button" variant="outline">
-              เปิด Popup
-            </Button>
           </div>
         }
         createButtonLabel="สร้างเอกสารใหม่"
@@ -285,7 +310,13 @@ export function ProjectDetailContent({
 
       <ProjectPopupModal
         apiBaseURL={apiBaseURL}
-        onBudgetUpdated={() => {
+        budget={projectBudget}
+        onBudgetUpdated={(budget) => {
+          setProjectBudget(budget);
+          setProject((currentProject) => ({
+            ...currentProject,
+            ...budget
+          }));
           setSuccessMessage("บันทึกงบประมาณสำเร็จ");
           router.refresh();
         }}
