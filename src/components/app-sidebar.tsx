@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileSearch, FolderOpen, Home } from "lucide-react";
+import { ChartNoAxesCombined, FileSearch, FolderOpen, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SidebarItem = {
@@ -16,7 +16,8 @@ type SidebarItem = {
 const primaryItems: SidebarItem[] = [
   { href: "/", label: "หน้าหลัก", icon: <Home size={18} strokeWidth={2.2} /> },
   { href: "/projects", label: "โครงการ", icon: <FolderOpen size={18} strokeWidth={2.2} /> },
-  { href: "/documents", label: "เอกสาร", icon: <FileSearch size={18} strokeWidth={2.2} /> }
+  { href: "/documents", label: "เอกสาร", icon: <FileSearch size={18} strokeWidth={2.2} /> },
+  { href: "/finance-summary", label: "สรุปงบ", icon: <ChartNoAxesCombined size={18} strokeWidth={2.2} /> }
 ];
 
 function isActivePath(pathname: string, href: string) {
