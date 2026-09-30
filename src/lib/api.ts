@@ -76,9 +76,6 @@ export type Project = {
   name: string;
   type: string;
   status: string;
-  escSatang?: number;
-  otherSatang?: number;
-  sponsorSatang?: number;
   createdAt: string;
   updatedAt: string;
   permissions?: ProjectPermissions;
@@ -912,7 +909,7 @@ export async function updateProjectBudget(input: {
   escSatang: number;
   otherSatang: number;
   sponsorSatang: number;
-}): Promise<{ project?: Project; error?: string }> {
+}): Promise<{ budget?: ProjectBudget; error?: string }> {
   try {
     const response = await fetchWithSessionRetry(
       `${input.apiBaseURL ?? apiBaseURL}/api/v1/projects/${input.projectId}/budget`,
@@ -932,7 +929,7 @@ export async function updateProjectBudget(input: {
       return { error: getAPIErrorMessage(payload, "ไม่สามารถบันทึกงบประมาณได้") };
     }
 
-    return (await response.json()) as { project?: Project };
+    return (await response.json()) as { budget?: ProjectBudget };
   } catch {
     return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
   }

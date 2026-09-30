@@ -8,6 +8,7 @@ import {
   getCurrentUser,
   getDocumentByCode,
   getGoogleLoginURL,
+  getProjectById,
   getProjectDeadlines,
   getProjects
 } from "@/lib/api";
@@ -102,15 +103,22 @@ export default async function ProjectPage({
     redirect(getGoogleLoginURL());
   }
 
-  const project =
+  const listedProject =
     projects.find((currentProject) => currentProject.projectCode === decodedSlug) ??
     projects.find((currentProject) => currentProject.id === decodedSlug);
 
-  if (!project) {
+  if (!listedProject) {
     notFound();
   }
 
-  const deadlineResult = await getProjectDeadlines(cookieHeader, project.id);
+  // The project list response does not currently populate budget details, while
+  // the project detail endpoint does. Always hydrate the selected project before
+  // rendering so persisted budget values survive a page reload.
+  const [detailedProject, deadlineResult] = await Promise.all([
+    getProjectById(cookieHeader, listedProject.id),
+    getProjectDeadlines(cookieHeader, listedProject.id)
+  ]);
+  const project = detailedProject ?? listedProject;
 
   return (
     <AppContentSection>

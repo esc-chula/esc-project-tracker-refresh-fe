@@ -29,10 +29,13 @@ import { buildGlobalSearchItems } from "@/lib/search-items";
 import type { DeadlineFormValues, DeadlinePermissions, ProjectDeadline } from "@/lib/deadline";
 
 function getProjectBudgetValues(project: Project): ProjectBudgetValues {
+  const sourceAmount = (source: "esc" | "sponsor" | "other") =>
+    project.budget?.sources?.find((item) => item.source === source)?.allocatedSatang ?? 0;
+
   return {
-    escSatang: project.escSatang ?? 0,
-    otherSatang: project.otherSatang ?? 0,
-    sponsorSatang: project.sponsorSatang ?? 0
+    escSatang: sourceAmount("esc"),
+    otherSatang: sourceAmount("other"),
+    sponsorSatang: sourceAmount("sponsor")
   };
 }
 
@@ -313,10 +316,6 @@ export function ProjectDetailContent({
         budget={projectBudget}
         onBudgetUpdated={(budget) => {
           setProjectBudget(budget);
-          setProject((currentProject) => ({
-            ...currentProject,
-            ...budget
-          }));
           setSuccessMessage("บันทึกงบประมาณสำเร็จ");
           router.refresh();
         }}
