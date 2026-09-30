@@ -11,13 +11,14 @@ type SidebarItem = {
   href: string;
   label: string;
   icon: ReactNode;
+  staffOnly?: boolean;
 };
 
-const primaryItems: SidebarItem[] = [
+const sidebarItems: SidebarItem[] = [
   { href: "/", label: "หน้าหลัก", icon: <Home size={18} strokeWidth={2.2} /> },
   { href: "/projects", label: "โครงการ", icon: <FolderOpen size={18} strokeWidth={2.2} /> },
   { href: "/documents", label: "เอกสาร", icon: <FileSearch size={18} strokeWidth={2.2} /> },
-  { href: "/finance-summary", label: "สรุปงบ", icon: <ChartNoAxesCombined size={18} strokeWidth={2.2} /> }
+  { href: "/finance-summary", label: "สรุปงบ", icon: <ChartNoAxesCombined size={18} strokeWidth={2.2} />, staffOnly: true }
 ];
 
 function isActivePath(pathname: string, href: string) {
@@ -28,8 +29,10 @@ function isActivePath(pathname: string, href: string) {
   );
 }
 
-export function AppSidebar() {
+export function AppSidebar({ role }: { role?: string }) {
   const pathname = usePathname();
+  const isStaff = role === "secretary" || role === "finance";
+  const primaryItems = sidebarItems.filter((item) => !item.staffOnly || isStaff);
 
   return (
     <>

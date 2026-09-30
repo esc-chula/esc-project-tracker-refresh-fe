@@ -16,6 +16,7 @@ export type ProjectPermissions = {
   canDelete: boolean;
   canCreateDocument: boolean;
   canManageMembers: boolean;
+  canEditBudget: boolean;
 };
 
 export type ProjectBudgetSource = {

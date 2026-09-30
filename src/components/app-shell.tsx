@@ -43,7 +43,7 @@ export function AppChrome({
     <main className="app-canvas min-h-screen overflow-x-auto p-[var(--shell-padding)]">
       <div className="flex min-w-0 flex-col gap-[var(--shell-gap)] md:flex-row">
         <div className="md:sticky md:top-[var(--shell-padding)] md:self-start">
-          <AppSidebar />
+          <AppSidebar role={currentUser?.role} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-[var(--shell-gap)] md:max-h-[calc(100vh-(var(--shell-padding)*2))] md:overflow-y-auto">
           {navItems?.length ? <AppNav currentUser={currentUser} items={navItems} /> : null}

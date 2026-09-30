@@ -75,6 +75,7 @@ export function ProjectDetailContent({
   const canDelete = permissions?.canDelete ?? false;
   const canCreateDocument = permissions?.canCreateDocument ?? false;
   const canManageMembers = permissions?.canManageMembers ?? false;
+  const canEditBudget = permissions?.canEditBudget ?? false;
   const deadlinePermissions = initialDeadlinePermissions;
 
   function closeDeadlineModal() {
@@ -193,7 +194,7 @@ export function ProjectDetailContent({
       <DocumentsExplorer
         afterDocumentsContent={
           <BudgetDonutChart
-            canEdit
+            canEdit={canEditBudget}
             data={budgetChartData}
             onEditClick={() => setIsProjectPopupOpen(true)}
             totalAmount={totalBudgetAmount}
