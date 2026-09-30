@@ -128,7 +128,13 @@ function BudgetInput({
         return;
       }
 
-      onBudgetUpdated?.(nextBudget);
+      const sourceAmount = (source: "esc" | "sponsor" | "other") =>
+        result.budget?.sources?.find((item) => item.source === source)?.allocatedSatang;
+      onBudgetUpdated?.({
+        escSatang: sourceAmount("esc") ?? nextBudget.escSatang,
+        otherSatang: sourceAmount("other") ?? nextBudget.otherSatang,
+        sponsorSatang: sourceAmount("sponsor") ?? nextBudget.sponsorSatang
+      });
       onCancel();
     } finally {
       setIsSubmitting(false);
