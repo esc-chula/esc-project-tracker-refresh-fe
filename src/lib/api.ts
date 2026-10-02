@@ -1055,7 +1055,7 @@ export function getAPIErrorMessage(payload: APIErrorPayload | null, fallback: st
   return firstError?.message || firstError?.error || payload.detail || payload.title || fallback;
 }
 
-export type DocumentWorkflowAction = "submitted" | "returned" | "signed" | "forwarded" | "approved" | "cancelled";
+export type DocumentWorkflowAction = "submitted" | "returned" | "signed" | "forwarded" | "approved" | "cancelled" | "rejected";
 
 export async function performDocumentWorkflowAction(input: {
   apiBaseURL?: string;
