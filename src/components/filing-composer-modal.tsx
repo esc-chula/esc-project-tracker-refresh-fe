@@ -15,6 +15,7 @@ const actionLabels: Record<DocumentWorkflowAction, string> = {
   signed: "กวศ. ลงลายเซ็น",
   forwarded: "ส่งให้กิจการนิสิตแล้ว",
   approved: "อนุมัติ",
+  rejected: "ปฏิเสธ",
   cancelled: "ยกเลิกเอกสาร"
 };
 
@@ -24,6 +25,7 @@ const successMessages: Record<DocumentWorkflowAction, string> = {
   signed: "บันทึกการลงลายเซ็นสำเร็จแล้ว",
   forwarded: "ส่งเอกสารให้กิจการนิสิตสำเร็จแล้ว",
   approved: "อนุมัติเอกสารสำเร็จแล้ว",
+  rejected: "ปฏิเสธเอกสารสำเร็จแล้ว",
   cancelled: "ยกเลิกเอกสารสำเร็จแล้ว"
 };
 

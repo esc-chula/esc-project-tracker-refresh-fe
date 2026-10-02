@@ -84,6 +84,7 @@ const activityLabels: Record<string, string> = {
   signed: "กวศ. ลงลายเซ็น",
   forwarded: "ส่งให้กิจการนิสิตแล้ว",
   approved: "อนุมัติ",
+  rejected: "ปฏิเสธ",
   cancelled: "ยกเลิกเอกสาร"
 };
 
@@ -170,6 +171,7 @@ function getStepStatuses(documentStatus: string) {
     case "submitted":
       return ["accepted", "warning", "disabled", "disabled", "disabled"];
     case "returned":
+    case "rejected":
       return ["accepted", "error", "disabled", "disabled", "disabled"];
     case "signed":
       return ["accepted", "accepted", "accepted", "disabled", "disabled"];
@@ -220,7 +222,7 @@ export function DocumentDetailContent({
   const ownerDisplayName = currentDocument.owner?.displayName || currentUserName;
   const runningNumberFiling = useMemo(() => buildRunningNumberFiling(currentDocument, project), [currentDocument, project]);
   const permissions = currentDocument.permissions;
-  const allowedActions = permissions?.allowedWorkflowActions ?? [];
+  const allowedActions = (permissions?.allowedWorkflowActions ?? []).filter((action) => action !== "rejected" || currentDocument.type === "2");
   const canEdit = permissions?.canEdit ?? false;
   const canDelete = permissions?.canDelete ?? false;
 
