@@ -40,6 +40,15 @@ const STEP_CARDS: StepCard[] = [
   { number: 5, title: "เอกสารได้รับ\nการอนุมัติ" }
 ];
 
+const STEP_TITLE_OVERRIDES: Record<string, Partial<Record<number, string>>> = {
+  "7": {
+    2: "ส่งให้ฝ่ายการเงิน\nตรวจสอบ",
+    4: "ส่งเอกสารและบิล\nให้กิจการนิสิต",
+    5: "ส่งเอกสารการเงิน\nครบเรียบร้อย"
+  },
+  "8": { 2: "ส่งให้ฝ่ายการเงิน\nตรวจสอบ" }
+};
+
 const DOCUMENT_FORMS_URL =
   "https://drive.google.com/drive/folders/1JX2siBJUvARG_TogziD2Rbej93yV6ont?usp=drive_link";
 
@@ -303,7 +312,7 @@ export function DocumentDetailContent({
                 >
                   {step.number}
                 </div>
-                <div className="mt-3 min-h-[48px] whitespace-pre-line text-center text-base font-medium leading-6 text-black">{step.title}</div>
+                <div className="mt-3 min-h-[48px] whitespace-pre-line text-center text-base font-medium leading-6 text-black">{STEP_TITLE_OVERRIDES[currentDocument.type]?.[step.number] ?? step.title}</div>
               </div>
             ))}
           </div>
