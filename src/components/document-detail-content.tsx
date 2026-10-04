@@ -1,7 +1,7 @@
 "use client";
 
-import { Clock3, Upload } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Clock3, ReceiptText, Upload } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Step1, Step2, Step3, Step4, Step5 } from "@/components/legacy-document-status-svg";
 import { ActionSuccessPopup } from "@/components/ui/action-success-popup";
@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDeleteModal } from "@/components/confirm-delete-modal";
 import { FilingComposerModal } from "@/components/filing-composer-modal";
 import { NewDocumentModal } from "@/components/new-document-modal";
+import { ReceiptBillPanel, type ReceiptBillPanelHandle } from "@/components/receipt-bill-panel";
 import { DeleteIcon, DocumentIcon, EditIcon, InfoIcon } from "@/components/ui/document-action-icons";
 import { FilePreviewChip } from "@/components/ui/file-preview-chip";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { SelectedActionBar } from "@/components/ui/selected-action-bar";
-import type { DocumentDetail, DocumentProjectSummary, Filing, FilingTimelineEvent } from "@/lib/api";
+import type { DocumentDetail, DocumentProjectSummary, Filing, FilingTimelineEvent, Receipt } from "@/lib/api";
 import { deleteDocument, getDocumentByIdClient, getFilingsByDocumentClient } from "@/lib/api";
 import { getDocumentTypeLabel } from "@/lib/document-view";
 import { saveRecentItem } from "@/lib/recent-items";
@@ -23,6 +24,7 @@ type DocumentDetailContentProps = {
   currentUserName: string;
   document: DocumentDetail;
   initialFilings: Filing[];
+  initialReceipts: Receipt[];
   initialTimeline: FilingTimelineEvent[];
   project: DocumentProjectSummary;
 };
@@ -194,6 +196,7 @@ export function DocumentDetailContent({
   currentUserName,
   document,
   initialFilings,
+  initialReceipts,
   project
 }: DocumentDetailContentProps) {
   const router = useRouter();
@@ -204,6 +207,7 @@ export function DocumentDetailContent({
   const [deleteErrorMessage, setDeleteErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [liveFilings, setLiveFilings] = useState<Filing[]>(initialFilings);
+  const receiptBillPanelRef = useRef<ReceiptBillPanelHandle>(null);
 
   const documentCode = `${project.projectCode}-${currentDocument.documentCode}`;
   const documentTitle = currentDocument.name || getDocumentTypeLabel(currentDocument.type, currentDocument.subType);
@@ -337,6 +341,16 @@ export function DocumentDetailContent({
                 <InfoIcon className="h-6 w-6" />
                 <span>ฟอร์มเอกสาร</span>
               </a>
+              {currentDocument.type === "7" && canEdit ? (
+                <button
+                  className="inline-flex h-10 items-center gap-2 rounded-2xl border border-red-700 bg-white px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50 md:h-12 md:px-6 md:text-base"
+                  onClick={() => receiptBillPanelRef.current?.openFileExplorer()}
+                  type="button"
+                >
+                  <ReceiptText className="h-5 w-5" strokeWidth={2.5} />
+                  อัปโหลดบิล
+                </button>
+              ) : null}
               {allowedActions.length > 0 ? (
                 <Button onClick={() => setIsUploadOpen(true)} type="button" variant="appRed">
                   <Upload className="h-5 w-5" strokeWidth={2.5} />
@@ -345,6 +359,17 @@ export function DocumentDetailContent({
               ) : null}
             </div>
           </div>
+
+          {currentDocument.type === "7" ? (
+            <ReceiptBillPanel
+              apiBaseURL={apiBaseURL}
+              canEdit={canEdit}
+              documentId={currentDocument.id}
+              initialReceipts={initialReceipts}
+              onSuccess={setSuccessMessage}
+              ref={receiptBillPanelRef}
+            />
+          ) : null}
 
           <section className="relative mt-10 pb-2">
             <div className="relative z-10 space-y-6">
