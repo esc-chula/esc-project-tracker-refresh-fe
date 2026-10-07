@@ -104,6 +104,7 @@ export type Document = {
   type: string;
   subType?: string;
   status: string;
+  displayStatus?: string;
   createdAt: string;
   updatedAt: string;
   permissions?: DocumentPermissions;
@@ -156,6 +157,7 @@ export type Filing = {
   forwardMessage?: string;
   approveMessage?: string;
   cancelMessage?: string;
+  rejectMessage?: string;
   attachments?: FilingAttachment[];
   createdAt: string;
   updatedAt: string;

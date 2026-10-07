@@ -101,6 +101,7 @@ function getActivityLabelClassName(filing: Filing) {
     case "approved":
       return "text-emerald-500";
     case "returned":
+    case "rejected":
       return "text-red-700";
     case "cancelled":
       return "text-gray-500";
@@ -120,6 +121,7 @@ function getCommentText(filing: Filing) {
   return (
     filing.approveMessage ||
     filing.cancelMessage ||
+    filing.rejectMessage ||
     filing.forwardMessage ||
     filing.signMessage ||
     filing.returnMessage ||
@@ -222,7 +224,7 @@ export function DocumentDetailContent({
   const ownerDisplayName = currentDocument.owner?.displayName || currentUserName;
   const runningNumberFiling = useMemo(() => buildRunningNumberFiling(currentDocument, project), [currentDocument, project]);
   const permissions = currentDocument.permissions;
-  const allowedActions = (permissions?.allowedWorkflowActions ?? []).filter((action) => action !== "rejected" || currentDocument.type === "2");
+  const allowedActions = permissions?.allowedWorkflowActions ?? [];
   const canEdit = permissions?.canEdit ?? false;
   const canDelete = permissions?.canDelete ?? false;
 

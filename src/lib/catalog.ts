@@ -59,10 +59,16 @@ export const documentStatusOptions = [
   { value: "draft", label: "ฉบับร่าง" },
   { value: "submitted", label: "กำลังตรวจสอบ" },
   { value: "returned", label: "ตีกลับ" },
+  { value: "rejected", label: "ปฏิเสธ" },
   { value: "signed", label: "รอส่งให้กิจการนิสิต" },
   { value: "forwarded", label: "ส่งให้กิจการนิสิตแล้ว" },
   { value: "approved", label: "อนุมัติ" },
-  { value: "cancelled", label: "ยกเลิกเอกสาร" }
+  { value: "cancelled", label: "ยกเลิกเอกสาร" },
+  { value: "money_received", label: "ได้รับเงินแล้ว" },
+  { value: "money_not_received", label: "ไม่ได้รับเงิน" },
+  { value: "awaiting_bill", label: "รอการส่งบิล" },
+  { value: "bill_submitted", label: "ส่งบิลแล้ว" },
+  { value: "bill_needs_revision", label: "รอแก้ไขบิล" }
 ] as const satisfies readonly CatalogOption[];
 
 export type DocumentStatus = (typeof documentStatusOptions)[number]["value"];
@@ -72,15 +78,19 @@ export function normalizeDocumentStatus(status: string): DocumentStatus {
     case "draft":
     case "submitted":
     case "returned":
+    case "rejected":
     case "signed":
     case "forwarded":
     case "approved":
     case "cancelled":
+    case "money_received":
+    case "money_not_received":
+    case "awaiting_bill":
+    case "bill_submitted":
+    case "bill_needs_revision":
       return status;
     case "pending":
       return "submitted";
-    case "rejected":
-      return "returned";
     case "completed":
       return "approved";
     default:

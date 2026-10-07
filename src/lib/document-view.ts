@@ -25,6 +25,7 @@ export type DocumentExplorerRow = {
   type: string;
   subType?: string;
   status: string;
+  displayStatus?: string;
   updatedAt: string;
 };
 
@@ -44,12 +45,18 @@ export function getDepartmentLabel(projectType: string) {
 export function getDocumentStatusClassName(status: string) {
   switch (normalizeDocumentStatus(status)) {
     case "approved":
+    case "money_received":
+    case "bill_submitted":
       return "text-emerald-500";
     case "submitted":
     case "signed":
     case "forwarded":
+    case "awaiting_bill":
       return "text-yellow-500";
     case "returned":
+    case "rejected":
+    case "money_not_received":
+    case "bill_needs_revision":
       return "text-red-500";
     case "cancelled":
       return "text-gray-400";
@@ -66,6 +73,8 @@ export function getDocumentDisplayStatusLabel(status: string) {
       return "กำลังตรวจสอบ";
     case "returned":
       return "ตีกลับ";
+    case "rejected":
+      return "ปฏิเสธ";
     case "signed":
       return "รอส่งให้กิจการนิสิต";
     case "forwarded":
@@ -74,6 +83,16 @@ export function getDocumentDisplayStatusLabel(status: string) {
       return "อนุมัติ";
     case "cancelled":
       return "ยกเลิกเอกสาร";
+    case "money_received":
+      return "ได้รับเงินแล้ว";
+    case "money_not_received":
+      return "ไม่ได้รับเงิน";
+    case "awaiting_bill":
+      return "รอการส่งบิล";
+    case "bill_submitted":
+      return "ส่งบิลแล้ว";
+    case "bill_needs_revision":
+      return "รอแก้ไขบิล";
   }
 }
 

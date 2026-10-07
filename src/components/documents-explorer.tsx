@@ -93,7 +93,7 @@ export function DocumentsExplorer({
         selectedDocumentTypes.includes(document.type);
       const matchesStatus =
         selectedDocumentStatuses.length === 0 ||
-        selectedDocumentStatuses.includes(normalizeDocumentStatus(document.status));
+        selectedDocumentStatuses.includes(normalizeDocumentStatus(document.displayStatus ?? document.status));
       const matchesSearch =
         normalizedQuery.length === 0 ||
         [
