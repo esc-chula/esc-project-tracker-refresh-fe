@@ -186,6 +186,18 @@ export type FilingTimelineEvent = {
   occurredAt: string;
 };
 
+export type Receipt = {
+  id: string;
+  documentId: string;
+  name: string;
+  url: string;
+  mimeType: string;
+  sizeBytes: number;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 type APIErrorPayload = {
   detail?: string;
   title?: string;
@@ -808,6 +820,122 @@ export async function getFilingsByDocumentClient(
       timeline: [],
       error: "ไม่สามารถเชื่อมต่อกับ API ได้"
     };
+  }
+}
+
+export async function listDocumentReceipts(cookieHeader: string, documentId: string): Promise<Receipt[]> {
+  if (!cookieHeader || !documentId) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(`${apiBaseURL}/api/v1/documents/${documentId}/receipts`, {
+      cache: "no-store",
+      headers: { Cookie: cookieHeader }
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as { receipts?: Receipt[] };
+    return payload.receipts ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function listDocumentReceiptsClient(
+  documentId: string,
+  input?: { apiBaseURL?: string }
+): Promise<{ receipts: Receipt[]; error?: string }> {
+  if (!documentId) {
+    return { receipts: [] };
+  }
+
+  try {
+    const response = await fetchWithSessionRetry(`${input?.apiBaseURL ?? apiBaseURL}/api/v1/documents/${documentId}/receipts`, {
+      cache: "no-store"
+    });
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { receipts: [], error: getAPIErrorMessage(payload, "ไม่สามารถโหลดรายการบิลได้") };
+    }
+
+    const payload = (await response.json()) as { receipts?: Receipt[] };
+    return { receipts: payload.receipts ?? [] };
+  } catch {
+    return { receipts: [], error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function uploadDocumentReceipts(input: {
+  apiBaseURL?: string;
+  documentId: string;
+  files: File[];
+}): Promise<{ receipts: Receipt[]; error?: string }> {
+  try {
+    const formData = new FormData();
+    for (const file of input.files) {
+      formData.append("files", file);
+    }
+
+    const response = await fetchWithSessionRetry(`${input.apiBaseURL ?? apiBaseURL}/api/v1/documents/${input.documentId}/receipts`, {
+      method: "POST",
+      body: formData
+    });
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { receipts: [], error: getAPIErrorMessage(payload, "ไม่สามารถอัปโหลดบิลได้") };
+    }
+
+    const payload = (await response.json()) as { receipts?: Receipt[] };
+    return { receipts: payload.receipts ?? [] };
+  } catch {
+    return { receipts: [], error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function reorderDocumentReceipts(input: {
+  apiBaseURL?: string;
+  documentId: string;
+  orderedReceiptIds: string[];
+}): Promise<{ receipts: Receipt[]; error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(`${input.apiBaseURL ?? apiBaseURL}/api/v1/documents/${input.documentId}/receipts/reorder`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderedReceiptIds: input.orderedReceiptIds })
+    });
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { receipts: [], error: getAPIErrorMessage(payload, "ไม่สามารถเรียงลำดับบิลได้") };
+    }
+
+    const payload = (await response.json()) as { receipts?: Receipt[] };
+    return { receipts: payload.receipts ?? [] };
+  } catch {
+    return { receipts: [], error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
+  }
+}
+
+export async function deleteDocumentReceipt(input: {
+  apiBaseURL?: string;
+  documentId: string;
+  receiptId: string;
+}): Promise<{ error?: string }> {
+  try {
+    const response = await fetchWithSessionRetry(
+      `${input.apiBaseURL ?? apiBaseURL}/api/v1/documents/${input.documentId}/receipts/${input.receiptId}`,
+      { method: "DELETE" }
+    );
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as APIErrorPayload | null;
+      return { error: getAPIErrorMessage(payload, "ไม่สามารถลบบิลได้") };
+    }
+    return {};
+  } catch {
+    return { error: "ไม่สามารถเชื่อมต่อกับ API ได้" };
   }
 }
 

@@ -8,6 +8,7 @@ import {
   getCurrentUser,
   getDocumentByCode,
   getGoogleLoginURL,
+  listDocumentReceipts,
   getProjectById,
   getProjectDeadlines,
   getProjects
@@ -80,6 +81,9 @@ export default async function ProjectPage({
       redirect(`/project/${encodeURIComponent(canonicalDocumentCode)}`);
     }
 
+    const initialReceipts =
+      resolvedDocument.type === "7" ? await listDocumentReceipts(cookieHeader, resolvedDocument.id) : [];
+
     return (
       <AppContentSection className="overflow-visible rounded-none bg-transparent p-0 md:p-0 xl:p-0">
         <DocumentDetailContent
@@ -87,6 +91,7 @@ export default async function ProjectPage({
           currentUserName={currentUser.displayName}
           document={resolvedDocument}
           initialFilings={[]}
+          initialReceipts={initialReceipts}
           initialTimeline={[]}
           project={resolvedDocument.project}
         />
