@@ -25,6 +25,7 @@ export type DocumentExplorerRow = {
   type: string;
   subType?: string;
   status: string;
+  displayStatus?: string;
   updatedAt: string;
 };
 
@@ -44,17 +45,23 @@ export function getDepartmentLabel(projectType: string) {
 export function getDocumentStatusClassName(status: string) {
   switch (normalizeDocumentStatus(status)) {
     case "approved":
-      return "text-emerald-500";
-    case "submitted":
-    case "signed":
-    case "forwarded":
+    case "payment_received":
+    case "forwarded_to_student_affairs":
+    case "receipt_forwarded":
+      return "text-green-500";
+    case "under_review":
+    case "awaiting_receipt":
+    case "awaiting_student_affairs":
       return "text-yellow-500";
     case "returned":
-      return "text-red-500";
+    case "awaiting_receipt_fix":
+    case "rejected":
+    case "payment_not_received":
+      return "text-red-700";
     case "cancelled":
-      return "text-gray-400";
+      return "text-neutral-500";
     default:
-      return "text-gray-400";
+      return "text-neutral-500";
   }
 }
 
@@ -62,16 +69,28 @@ export function getDocumentDisplayStatusLabel(status: string) {
   switch (normalizeDocumentStatus(status)) {
     case "draft":
       return "ฉบับร่าง";
-    case "submitted":
+    case "under_review":
       return "กำลังตรวจสอบ";
+    case "awaiting_receipt":
+      return "รอการส่งบิล";
     case "returned":
       return "ตีกลับ";
-    case "signed":
+    case "awaiting_receipt_fix":
+      return "รอแก้ไขบิล";
+    case "rejected":
+      return "ปฏิเสธ";
+    case "awaiting_student_affairs":
       return "รอส่งให้กิจการนิสิต";
-    case "forwarded":
+    case "forwarded_to_student_affairs":
       return "ส่งให้กิจการนิสิตแล้ว";
+    case "receipt_forwarded":
+      return "ส่งบิลแล้ว";
     case "approved":
       return "อนุมัติ";
+    case "payment_received":
+      return "ได้รับเงินแล้ว";
+    case "payment_not_received":
+      return "ไม่ได้รับเงิน";
     case "cancelled":
       return "ยกเลิกเอกสาร";
   }
@@ -80,15 +99,21 @@ export function getDocumentDisplayStatusLabel(status: string) {
 export function getDocumentStatusBadgeClassName(status: string) {
   switch (normalizeDocumentStatus(status)) {
     case "approved":
-      return "bg-emerald-500 text-white";
-    case "submitted":
-    case "signed":
-    case "forwarded":
+    case "payment_received":
+    case "forwarded_to_student_affairs":
+    case "receipt_forwarded":
+      return "bg-green-500 text-white";
+    case "under_review":
+    case "awaiting_receipt":
+    case "awaiting_student_affairs":
       return "bg-yellow-500 text-white";
     case "returned":
-      return "bg-red-500 text-white";
+    case "awaiting_receipt_fix":
+    case "rejected":
+    case "payment_not_received":
+      return "bg-red-700 text-white";
     case "cancelled":
-      return "bg-gray-400 text-white";
+      return "bg-neutral-500 text-white";
   }
 }
 

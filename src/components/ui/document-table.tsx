@@ -121,7 +121,7 @@ export function DocumentTable({
                 </div>
               </DataTableCell>
               <DataTableCell>
-                <TruncatedText className={getDocumentStatusClassName(document.status)}>{getDocumentDisplayStatusLabel(document.status)}</TruncatedText>
+                <TruncatedText className={getDocumentStatusClassName(document.displayStatus ?? document.status)}>{getDocumentDisplayStatusLabel(document.displayStatus ?? document.status)}</TruncatedText>
               </DataTableCell>
               <DataTableCell>
                 <TruncatedText className="text-gray-500">{formatUpdatedAt(document.updatedAt)}</TruncatedText>
