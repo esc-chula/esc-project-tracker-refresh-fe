@@ -46,22 +46,22 @@ export function getDocumentStatusClassName(status: string) {
   switch (normalizeDocumentStatus(status)) {
     case "approved":
     case "payment_received":
+    case "forwarded_to_student_affairs":
     case "receipt_forwarded":
-      return "text-emerald-500";
+      return "text-green-500";
     case "under_review":
     case "awaiting_receipt":
     case "awaiting_student_affairs":
-    case "forwarded_to_student_affairs":
       return "text-yellow-500";
     case "returned":
     case "awaiting_receipt_fix":
     case "rejected":
     case "payment_not_received":
-      return "text-red-500";
+      return "text-red-700";
     case "cancelled":
-      return "text-gray-400";
+      return "text-neutral-500";
     default:
-      return "text-gray-400";
+      return "text-neutral-500";
   }
 }
 
@@ -100,20 +100,20 @@ export function getDocumentStatusBadgeClassName(status: string) {
   switch (normalizeDocumentStatus(status)) {
     case "approved":
     case "payment_received":
+    case "forwarded_to_student_affairs":
     case "receipt_forwarded":
-      return "bg-emerald-500 text-white";
+      return "bg-green-500 text-white";
     case "under_review":
     case "awaiting_receipt":
     case "awaiting_student_affairs":
-    case "forwarded_to_student_affairs":
       return "bg-yellow-500 text-white";
     case "returned":
     case "awaiting_receipt_fix":
     case "rejected":
     case "payment_not_received":
-      return "bg-red-500 text-white";
+      return "bg-red-700 text-white";
     case "cancelled":
-      return "bg-gray-400 text-white";
+      return "bg-neutral-500 text-white";
   }
 }
 
