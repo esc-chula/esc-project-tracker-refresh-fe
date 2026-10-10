@@ -57,18 +57,18 @@ export const documentTypeOptions = [
 
 export const documentStatusOptions = [
   { value: "draft", label: "ฉบับร่าง" },
-  { value: "submitted", label: "กำลังตรวจสอบ" },
+  { value: "under_review", label: "กำลังตรวจสอบ" },
+  { value: "awaiting_receipt", label: "รอการส่งบิล" },
   { value: "returned", label: "ตีกลับ" },
+  { value: "awaiting_receipt_fix", label: "รอแก้ไขบิล" },
   { value: "rejected", label: "ปฏิเสธ" },
-  { value: "signed", label: "รอส่งให้กิจการนิสิต" },
-  { value: "forwarded", label: "ส่งให้กิจการนิสิตแล้ว" },
+  { value: "awaiting_student_affairs", label: "รอส่งให้กิจการนิสิต" },
+  { value: "forwarded_to_student_affairs", label: "ส่งให้กิจการนิสิตแล้ว" },
+  { value: "receipt_forwarded", label: "ส่งบิลแล้ว" },
   { value: "approved", label: "อนุมัติ" },
-  { value: "cancelled", label: "ยกเลิกเอกสาร" },
-  { value: "money_received", label: "ได้รับเงินแล้ว" },
-  { value: "money_not_received", label: "ไม่ได้รับเงิน" },
-  { value: "awaiting_bill", label: "รอการส่งบิล" },
-  { value: "bill_submitted", label: "ส่งบิลแล้ว" },
-  { value: "bill_needs_revision", label: "รอแก้ไขบิล" }
+  { value: "payment_received", label: "ได้รับเงินแล้ว" },
+  { value: "payment_not_received", label: "ไม่ได้รับเงิน" },
+  { value: "cancelled", label: "ยกเลิกเอกสาร" }
 ] as const satisfies readonly CatalogOption[];
 
 export type DocumentStatus = (typeof documentStatusOptions)[number]["value"];
@@ -76,21 +76,26 @@ export type DocumentStatus = (typeof documentStatusOptions)[number]["value"];
 export function normalizeDocumentStatus(status: string): DocumentStatus {
   switch (status) {
     case "draft":
-    case "submitted":
+    case "under_review":
+    case "awaiting_receipt":
     case "returned":
+    case "awaiting_receipt_fix":
     case "rejected":
-    case "signed":
-    case "forwarded":
+    case "awaiting_student_affairs":
+    case "forwarded_to_student_affairs":
+    case "receipt_forwarded":
     case "approved":
+    case "payment_received":
+    case "payment_not_received":
     case "cancelled":
-    case "money_received":
-    case "money_not_received":
-    case "awaiting_bill":
-    case "bill_submitted":
-    case "bill_needs_revision":
       return status;
+    case "submitted":
     case "pending":
-      return "submitted";
+      return "under_review";
+    case "signed":
+      return "awaiting_student_affairs";
+    case "forwarded":
+      return "forwarded_to_student_affairs";
     case "completed":
       return "approved";
     default:
