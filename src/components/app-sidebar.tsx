@@ -36,10 +36,10 @@ export function AppSidebar({ role }: { role?: string }) {
 
   return (
     <>
-      <nav className="rounded-[var(--content-radius)] bg-carmine px-3 py-3 text-white md:hidden">
+      <nav aria-label="เมนูหลัก" className="sticky top-0 z-20 rounded-[var(--content-radius)] bg-carmine px-3 py-2 text-white shadow-sm md:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 px-2">
-            <Image alt="ESC" height={34} src="/icons/esc.svg" width={26} />
+            <Image alt="ESC Document System" height={34} src="/icons/esc.svg" width={26} />
           </div>
 
           <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ export function AppSidebar({ role }: { role?: string }) {
                 <Link className="block" href={item.href} key={item.label}>
                   <div
                     className={cn(
-                      "flex h-12 w-12 items-center justify-center rounded-2xl transition-colors",
+                      "flex h-11 w-11 items-center justify-center rounded-2xl transition-colors",
                       active ? "bg-white text-carmine" : "text-white hover:bg-white/10"
                     )}
                   >

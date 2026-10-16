@@ -27,9 +27,9 @@ export function SelectedActionBar({
   hideDelete?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
       <span className={iconSlotClassName}>{icon ?? <DocumentIcon className="h-6 w-6" />}</span>
-      <span className="min-w-0 truncate text-xl font-medium leading-8 text-black">{title}</span>
+      <span className="min-w-0 flex-1 truncate text-lg font-medium leading-7 text-black sm:flex-none sm:text-xl sm:leading-8">{title}</span>
       {hideEdit ? null : (
         <button aria-label="แก้ไข" className={iconButtonClassName} onClick={onEdit} type="button">
           <span className={iconSlotClassName}>{editIcon ?? <EditIcon className="h-6 w-6" />}</span>

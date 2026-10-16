@@ -148,11 +148,11 @@ export function DocumentsExplorer({
   }, [currentPage, filteredDocuments, pageSize, pageSizeOptions]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <PageToolbar
         action={
           onCreateClick || leadingAction ? (
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start sm:gap-3">
               {leadingAction ?? <DocumentProcessLink />}
               {onCreateClick ? (
                 <Button onClick={onCreateClick} type="button" variant="appRed">
