@@ -47,14 +47,14 @@ export function PaginationControls({
   }, []);
 
   return (
-    <div className="flex flex-col gap-3 pt-1 md:flex-row md:items-center md:justify-between">
-      <div className="text-sm text-gray-500">ทั้งหมด {totalItems} ผลลัพธ์</div>
+    <div className="flex min-w-0 max-w-full items-center justify-between gap-2 pt-1">
+      <div className="min-w-0 truncate text-xs text-gray-500 md:text-sm">ทั้งหมด {totalItems} ผลลัพธ์</div>
 
-      <div className="flex flex-wrap items-center gap-3 md:gap-5">
-        <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 md:gap-5">
+        <div className="flex items-center gap-1 md:gap-2">
           <button
             aria-label="Previous page"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-7 w-7 items-center justify-center rounded-full md:h-8 md:w-8 text-gray-400 transition hover:bg-gray-100 hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
             disabled={currentPage <= 1}
             onClick={() => onPageChange(currentPage - 1)}
             type="button"
@@ -62,13 +62,13 @@ export function PaginationControls({
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          <div className="flex h-8 min-w-[2rem] items-center justify-center rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-black">
+          <div className="flex h-7 min-w-[1.75rem] items-center justify-center rounded-lg border border-gray-200 bg-white px-2 text-xs md:h-8 md:min-w-[2rem] md:px-3 md:text-sm font-medium text-black">
             {currentPage}
           </div>
 
           <button
             aria-label="Next page"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-7 w-7 items-center justify-center rounded-full md:h-8 md:w-8 text-gray-400 transition hover:bg-gray-100 hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
             disabled={currentPage >= totalPages}
             onClick={() => onPageChange(currentPage + 1)}
             type="button"
@@ -79,7 +79,7 @@ export function PaginationControls({
 
         <div className="relative" ref={containerRef}>
           <button
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 transition hover:border-gray-300"
+            className="inline-flex h-8 items-center gap-1 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-2 text-xs md:h-9 md:px-3 md:text-sm text-gray-700 transition hover:border-gray-300"
             onClick={() => setIsPageSizeOpen((currentOpen) => !currentOpen)}
             type="button"
           >
@@ -97,7 +97,7 @@ export function PaginationControls({
                     return (
                       <button
                         className={cn(
-                          "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm text-black transition hover:bg-gray-100",
+                          "flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs text-black md:text-sm transition hover:bg-gray-100",
                           selected && "bg-gray-100"
                         )}
                         key={option}
