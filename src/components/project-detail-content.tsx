@@ -202,7 +202,7 @@ export function ProjectDetailContent({
         }
         afterFiltersContent={
           <div className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <SelectedActionBar
                 hideDelete={!canDelete}
                 hideEdit={!canEdit}
@@ -215,7 +215,7 @@ export function ProjectDetailContent({
                 title={`${project.projectCode} ${project.name}`}
               />
               {canManageMembers ? (
-                <Button onClick={() => setIsManageMembersOpen(true)} type="button" variant="outline">
+                <Button className="w-full sm:w-auto" onClick={() => setIsManageMembersOpen(true)} type="button" variant="outline">
                   จัดการผู้เข้าถึง
                 </Button>
               ) : null}
@@ -233,11 +233,6 @@ export function ProjectDetailContent({
               }}
               permissions={deadlinePermissions}
             />
-            {canManageMembers ? (
-              <Button onClick={() => setIsManageMembersOpen(true)} type="button" variant="outline">
-                จัดการผู้เข้าถึง
-              </Button>
-            ) : null}
           </div>
         }
         createButtonLabel="สร้างเอกสารใหม่"

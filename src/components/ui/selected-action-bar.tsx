@@ -30,26 +30,26 @@ export function SelectedActionBar({
   hideDelete?: boolean;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
       <span className={iconSlotClassName}>{icon ?? <DocumentIcon className="h-6 w-6" />}</span>
-      <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-xl font-medium leading-8 text-black">
-        {code ? <span className="shrink-0">{code}</span> : null}
-        <span className="min-w-0 truncate">{title}</span>
-      </div>
-      {hideEdit && hideDelete ? null : (
-        <div className="ml-auto flex shrink-0 items-center gap-3 md:ml-0">
-          {hideEdit ? null : (
-            <button aria-label="แก้ไข" className={iconButtonClassName} onClick={onEdit} type="button">
-              <span className={iconSlotClassName}>{editIcon ?? <EditIcon className="h-6 w-6" />}</span>
-            </button>
-          )}
-          {hideDelete ? null : (
-            <button aria-label="ลบ" className={deleteButtonClassName} onClick={onDelete} type="button">
-              <span className={iconSlotClassName}>{deleteIcon ?? <DeleteIcon className="h-6 w-6" />}</span>
-            </button>
-          )}
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-lg font-medium leading-7 text-black md:text-xl md:leading-8">
+          {code ? <span className="shrink-0">{code}</span> : null}
+          <span className="min-w-0 truncate">{title}</span>
         </div>
-      )}
-    </div>
-  );
+        {hideEdit && hideDelete ? null : (
+          <div className="ml-auto flex shrink-0 items-center gap-3 md:ml-0">
+            {hideEdit ? null : (
+              <button aria-label="แก้ไข" className={iconButtonClassName} onClick={onEdit} type="button">
+                <span className={iconSlotClassName}>{editIcon ?? <EditIcon className="h-6 w-6" />}</span>
+              </button>
+            )}
+            {hideDelete ? null : (
+              <button aria-label="ลบ" className={deleteButtonClassName} onClick={onDelete} type="button">
+                <span className={iconSlotClassName}>{deleteIcon ?? <DeleteIcon className="h-6 w-6" />}</span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+   );
 }

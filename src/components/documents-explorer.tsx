@@ -148,7 +148,7 @@ export function DocumentsExplorer({
   }, [currentPage, filteredDocuments, pageSize, pageSizeOptions]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       <PageToolbar
         action={
           onCreateClick || leadingAction ? (

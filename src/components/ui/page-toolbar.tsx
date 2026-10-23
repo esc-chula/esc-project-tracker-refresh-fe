@@ -15,9 +15,9 @@ export function PageToolbar({
 }) {
   return (
     <section className={cn("space-y-4", className)}>
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center md:gap-4">
         <div className="min-w-0 flex-1">{search}</div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        {action ? <div className="w-full sm:w-auto sm:shrink-0">{action}</div> : null}
       </div>
 
       {controls || trailing ? (

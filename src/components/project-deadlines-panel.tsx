@@ -47,7 +47,7 @@ export function ProjectDeadlinesPanel({
 
           return (
             <article
-              className={`flex items-center gap-3 rounded-xl border px-3 py-3 sm:px-4 ${
+              className={`flex items-start gap-3 rounded-xl border px-3 py-3 sm:items-center sm:px-4 ${
                 attention ? "border-red-300 bg-red-100" : "border-transparent bg-white"
               }`}
               key={deadline.id}
@@ -65,7 +65,7 @@ export function ProjectDeadlinesPanel({
                 </p>
               </div>
               {permissions.canUpdate || permissions.canDelete ? (
-                <div className="flex shrink-0 items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1 self-center sm:self-auto">
                   {permissions.canUpdate ? (
                     <button
                       aria-label={`แก้ไข ${deadline.title}`}

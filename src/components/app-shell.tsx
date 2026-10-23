@@ -40,7 +40,7 @@ export function AppChrome({
   }, []);
 
   return (
-    <main className="app-canvas min-h-screen overflow-x-auto p-[var(--shell-padding)]">
+    <main className="app-canvas min-h-screen overflow-x-hidden p-[var(--shell-padding)]">
       <div className="flex min-w-0 flex-col gap-[var(--shell-gap)] md:flex-row">
         <div className="md:sticky md:top-[var(--shell-padding)] md:self-start">
           <AppSidebar role={currentUser?.role} />
@@ -65,7 +65,7 @@ export function AppContentSection({
   return (
     <section
       className={cn(
-        "min-w-0 flex-1 overflow-x-auto rounded-[var(--content-radius)] bg-white px-4 pb-5 pt-4 sm:px-5 md:px-6 md:pb-7 md:pt-5 xl:px-9 xl:pb-10 xl:pt-6",
+        "min-w-0 flex-1 overflow-x-hidden rounded-[var(--content-radius)] bg-white px-4 pb-5 pt-4 sm:px-5 md:px-6 md:pb-7 md:pt-5 xl:px-9 xl:pb-10 xl:pt-6",
         className
       )}
     >
