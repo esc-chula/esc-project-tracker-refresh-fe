@@ -17,8 +17,7 @@ export default async function HomePage() {
         projectType: project?.type ?? document.projectCode.slice(0, 2)
       };
     })
-    .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
-    .slice(0, 4);
+    .sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime());
 
   return (
     <AppContentSection>

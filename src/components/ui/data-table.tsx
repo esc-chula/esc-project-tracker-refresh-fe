@@ -25,7 +25,7 @@ export function DataTableHead({
 }) {
   return (
     <thead>
-      <tr className="border-b border-gray-300 text-xs font-semibold text-black md:text-base">{children}</tr>
+      <tr className="border-b border-gray-300 text-sm font-semibold text-black">{children}</tr>
     </thead>
   );
 }
@@ -114,7 +114,7 @@ export function EmptyTableRow({
 }) {
   return (
     <DataTableRow className="text-gray-500">
-      <DataTableCell className="px-3 py-10 text-center" colSpan={colSpan}>
+      <DataTableCell className="px-3 py-10 text-center text-base" colSpan={colSpan}>
         {children}
       </DataTableCell>
     </DataTableRow>

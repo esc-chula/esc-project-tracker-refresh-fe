@@ -19,7 +19,6 @@ import {
   DataTableHead,
   DataTableHeaderCell,
   DataTableRow,
-  EmptyTableRow
 } from "@/components/ui/data-table";
 
 type DocumentTableProps = {
@@ -31,7 +30,7 @@ type DocumentTableProps = {
 const documentColumnWidths = ["10%", "15%", "15%", "15%", "15%", "12.5%", "12.5%"] as const;
 
 function TruncatedText({ children, className }: { children: ReactNode; className?: string }) {
-  return <span className={`block w-full min-w-0 truncate text-xs md:text-sm ${className ?? ""}`}>{children}</span>;
+  return <span className={`block w-full min-w-0 truncate text-xs ${className ?? ""}`}>{children}</span>;
 }
 
 function maskPhone(phone?: string) {
@@ -66,15 +65,7 @@ export function DocumentTable({
         <DataTableHeaderCell>อัปเดตล่าสุด</DataTableHeaderCell>
       </DataTableHead>
       <DataTableBody>
-        {isLoading ? (
-          <DataTableRow>
-            <DataTableCell className="py-16" colSpan={7}>
-              <div className="flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-500" />
-              </div>
-            </DataTableCell>
-          </DataTableRow>
-        ) : documents.length > 0 ? (
+        {!isLoading && documents.length > 0 ? (
           documents.map((document) => (
             <DataTableRow
               className="cursor-pointer transition hover:bg-gray-50/80"
@@ -95,7 +86,7 @@ export function DocumentTable({
               </DataTableCell>
               <DataTableCell>
                 <div className="inline-flex max-w-full min-w-0 items-center gap-1">
-                  <span className="min-w-0 truncate text-xs md:text-sm">
+                  <span className="min-w-0 truncate text-xs">
                     {visiblePhoneRows[document.id] ? document.owner?.phone || "-" : maskPhone(document.owner?.phone)}
                   </span>
                   {document.owner?.phone ? (
@@ -128,11 +119,17 @@ export function DocumentTable({
               </DataTableCell>
             </DataTableRow>
           ))
-        ) : (
-          <EmptyTableRow colSpan={7}>{emptyText}</EmptyTableRow>
-        )}
+        ) : null}
       </DataTableBody>
-      </DataTable>
+    </DataTable>
+    {/* outside the scroller so it centers in the visible width, not the 1000px table */}
+    {isLoading ? (
+      <div className="flex items-center justify-center border-b border-gray-300 py-16">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-500" />
+      </div>
+    ) : documents.length === 0 ? (
+      <div className="border-b border-gray-300 px-3 py-10 text-center text-base text-gray-500">{emptyText}</div>
+    ) : null}
     </>
   );
 }
