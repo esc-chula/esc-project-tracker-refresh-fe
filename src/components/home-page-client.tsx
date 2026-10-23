@@ -7,6 +7,7 @@ import { ProjectCard } from "@/components/project-card";
 import { DocumentTable } from "@/components/ui/document-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageSearchBar } from "@/components/ui/page-search-bar";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PageSectionHeader } from "@/components/ui/page-section-header";
 import type { DocumentExplorerRow } from "@/lib/document-view";
 import { getRecentItems, type RecentItem } from "@/lib/recent-items";
@@ -17,9 +18,18 @@ type HomePageClientProps = {
   initialDocuments: DocumentExplorerRow[];
 };
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+
 export function HomePageClient({ initialProjects, initialDocuments }: HomePageClientProps) {
   const [query, setQuery] = useState("");
-  const [recentItems] = useState<RecentItem[]>(() => getRecentItems());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZE_OPTIONS[0]);
+  const [recentItems] =useState<RecentItem[]>(() => getRecentItems());
+
+  const pagedDocuments = useMemo(
+    () => initialDocuments.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [currentPage, initialDocuments, pageSize]
+  );
 
   const latestProjects = useMemo(() => initialProjects.slice(0, 4), [initialProjects]);
   const searchItems = useMemo(
@@ -42,13 +52,13 @@ export function HomePageClient({ initialProjects, initialDocuments }: HomePageCl
       <section>
         <PageSectionHeader
           href="/projects"
-          icon={<FolderOpen className="h-6 w-6 text-black" />}
+          icon={<FolderOpen className="h-5 w-5 text-black md:h-6 md:w-6" />}
           linkLabel="ดูโครงการทั้งหมด"
           title="โครงการล่าสุด"
         />
 
         {latestProjects.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
             {latestProjects.map((project) => (
               <ProjectCard
                 code={project.projectCode}
@@ -67,15 +77,37 @@ export function HomePageClient({ initialProjects, initialDocuments }: HomePageCl
       <section>
         <PageSectionHeader
           href="/documents"
-          icon={<FileSearch className="h-6 w-6 text-black" />}
+          icon={<FileSearch className="h-5 w-5 text-black md:h-6 md:w-6" />}
           linkLabel="ดูเอกสารทั้งหมด"
           title="เอกสารล่าสุด"
         />
 
-        <DocumentTable
-          documents={initialDocuments}
-          emptyText="ไม่พบเอกสาร"
-        />
+        <div className="hidden md:block">
+          <DocumentTable
+            documents={initialDocuments.slice(0, 4)}
+            emptyText="ไม่พบเอกสาร"
+          />
+        </div>
+
+        <div className="space-y-5 md:hidden">
+          <DocumentTable
+            documents={pagedDocuments}
+            emptyText="ไม่พบเอกสาร"
+          />
+          {initialDocuments.length > 0 ? (
+            <PaginationControls
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+              pageSize={pageSize}
+              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              totalItems={initialDocuments.length}
+            />
+          ) : null}
+        </div>
       </section>
     </div>
   );

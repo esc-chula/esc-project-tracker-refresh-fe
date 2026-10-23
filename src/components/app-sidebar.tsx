@@ -50,7 +50,7 @@ export function AppSidebar({ role }: { role?: string }) {
                 <Link className="block" href={item.href} key={item.label}>
                   <div
                     className={cn(
-                      "flex h-12 w-12 items-center justify-center rounded-2xl transition-colors",
+                      "flex h-10 w-10 items-center justify-center rounded-xl sm:h-12 sm:w-12 sm:rounded-2xl transition-colors",
                       active ? "bg-white text-carmine" : "text-white hover:bg-white/10"
                     )}
                   >

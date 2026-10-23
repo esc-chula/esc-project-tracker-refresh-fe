@@ -131,7 +131,7 @@ function buildNavItems(pathname: string): AppNavItem[] {
 
 function AppNav({ currentUser, items }: { currentUser: CurrentUser | null; items: AppNavItem[] }) {
   return (
-    <nav className="flex min-h-[64px] min-w-0 flex-wrap items-center justify-between gap-3 rounded-3xl bg-white px-4 py-3 text-lg font-medium leading-7 sm:px-5 md:min-h-[72px] md:flex-nowrap md:px-6 lg:px-9 lg:text-xl lg:leading-8">
+    <nav className="flex min-h-[64px] min-w-0 flex-wrap items-center justify-between gap-3 rounded-3xl bg-white px-4 py-3 text-base font-medium leading-7 sm:px-5 md:text-lg md:min-h-[72px] md:flex-nowrap md:px-6 lg:px-9 lg:text-xl lg:leading-8">
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto md:max-w-[70%] md:gap-3 md:overflow-visible">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;

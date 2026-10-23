@@ -8,7 +8,7 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex min-h-[260px] items-center justify-center text-center text-lg text-gray-500", className)}>
+    <div className={cn("flex min-h-[260px] items-center justify-center text-center text-base text-gray-500 md:text-lg", className)}>
       {children}
     </div>
   );

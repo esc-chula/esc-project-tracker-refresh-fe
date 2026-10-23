@@ -71,11 +71,11 @@ export function PageSearchBar({
     <div className={cn("relative", className)} data-search-scope={searchScope}>
       <label className="relative block">
         <Search
-          className="pointer-events-none absolute left-5 top-1/2 h-6 w-6 -translate-y-1/2 text-black"
+          className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 md:h-6 md:w-6 text-black"
           strokeWidth={2.2}
         />
         <input
-          className="h-[48px] w-full rounded-full border-0 bg-gray-100 pl-16 pr-5 text-base text-black outline-none transition placeholder:text-gray-500 focus-visible:ring-0"
+          className="h-[48px] w-full rounded-full border-0 bg-gray-100 pl-16 pr-5 text-sm text-black outline-none transition placeholder:text-gray-500 focus-visible:ring-0"
           onBlur={() => {
             window.setTimeout(() => setIsFocused(false), 120);
           }}
