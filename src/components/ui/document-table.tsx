@@ -50,7 +50,7 @@ export function DocumentTable({
   const [visiblePhoneRows, setVisiblePhoneRows] = useState<Record<string, boolean>>({});
 
   return (
-    <DataTable tableClassName="table-fixed">
+    <DataTable tableClassName="min-w-[1000px] table-fixed xl:min-w-0">
       <colgroup>
         {documentColumnWidths.map((width, index) => (
           <col key={`document-column-${index}`} style={{ width }} />

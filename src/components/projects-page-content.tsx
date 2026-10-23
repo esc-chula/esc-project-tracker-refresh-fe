@@ -115,11 +115,11 @@ export function ProjectsPageContent({
       <div className="space-y-8">
         <PageToolbar
           action={
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <DocumentProcessLink />
-              <Button onClick={() => setIsCreateModalOpen(true)} type="button" variant="appRed">
+              <Button className="min-w-0" onClick={() => setIsCreateModalOpen(true)} type="button" variant="appRed">
                 <Plus className="h-5 w-5" strokeWidth={2.5} />
-                เปิดโครงการใหม่
+                <span className="truncate">เปิดโครงการใหม่</span>
               </Button>
             </div>
           }

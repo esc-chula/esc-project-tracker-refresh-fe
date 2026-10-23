@@ -47,10 +47,10 @@ export function PaginationControls({
   }, []);
 
   return (
-    <div className="flex flex-col gap-3 pt-1 md:flex-row md:items-center md:justify-between">
-      <div className="text-sm text-gray-500">ทั้งหมด {totalItems} ผลลัพธ์</div>
+    <div className="flex items-center justify-between gap-3 pt-1">
+      <div className="min-w-0 truncate text-xs md:text-sm text-gray-500">ทั้งหมด {totalItems} ผลลัพธ์</div>
 
-      <div className="flex flex-wrap items-center gap-3 md:gap-5">
+      <div className="flex shrink-0 items-center gap-2 md:gap-5">
         <div className="flex items-center gap-2">
           <button
             aria-label="Previous page"
@@ -62,7 +62,7 @@ export function PaginationControls({
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          <div className="flex h-8 min-w-[2rem] items-center justify-center rounded-lg border border-gray-200 bg-white px-3 text-sm font-medium text-black">
+          <div className="flex h-8 min-w-[2rem] items-center justify-center rounded-lg border border-gray-200 bg-white px-3 text-xs md:text-sm font-medium text-black">
             {currentPage}
           </div>
 
@@ -79,7 +79,7 @@ export function PaginationControls({
 
         <div className="relative" ref={containerRef}>
           <button
-            className="inline-flex h-9 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 transition hover:border-gray-300"
+            className="inline-flex h-9 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 text-xs md:text-sm text-gray-700 transition hover:border-gray-300"
             onClick={() => setIsPageSizeOpen((currentOpen) => !currentOpen)}
             type="button"
           >

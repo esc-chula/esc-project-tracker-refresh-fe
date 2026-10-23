@@ -233,11 +233,11 @@ export function DocumentDetailContent({
   const canDelete = permissions?.canDelete ?? false;
 
   const legacyStepVisuals = [
-    <Step1 key="step-1" className="h-[94px] w-auto" fill={stepStatuses[0] ?? "disabled"} />,
-    <Step2 key="step-2" className="h-[94px] w-auto" fill={stepStatuses[1] ?? "disabled"} />,
-    <Step3 key="step-3" className="h-[94px] w-auto" fill={stepStatuses[2] ?? "disabled"} />,
-    <Step4 key="step-4" className="h-[94px] w-auto" fill={stepStatuses[3] ?? "disabled"} />,
-    <Step5 key="step-5" className="h-[94px] w-auto" fill={stepStatuses[4] ?? "disabled"} />
+    <Step1 key="step-1" className="h-[60px] w-auto max-w-full md:h-[94px]" fill={stepStatuses[0] ?? "disabled"} />,
+    <Step2 key="step-2" className="h-[60px] w-auto max-w-full md:h-[94px]" fill={stepStatuses[1] ?? "disabled"} />,
+    <Step3 key="step-3" className="h-[60px] w-auto max-w-full md:h-[94px]" fill={stepStatuses[2] ?? "disabled"} />,
+    <Step4 key="step-4" className="h-[60px] w-auto max-w-full md:h-[94px]" fill={stepStatuses[3] ?? "disabled"} />,
+    <Step5 key="step-5" className="h-[60px] w-auto max-w-full md:h-[94px]" fill={stepStatuses[4] ?? "disabled"} />
   ];
 
   useEffect(() => {
@@ -289,47 +289,50 @@ export function DocumentDetailContent({
 
   return (
     <div className="flex min-h-full flex-col">
-      <section className="flex min-h-full flex-1 flex-col rounded-[20px] bg-white px-8 pb-10 pt-8">
+      <section className="flex min-h-full flex-1 flex-col rounded-[20px] bg-white px-4 pb-10 pt-8 md:px-8">
         <h2 className="mb-7 text-center text-2xl font-medium text-black">สถานะเอกสารปัจจุบัน</h2>
 
-        <div className="mx-auto max-w-[1120px]">
-          <div className="grid grid-cols-5 items-center">
-            {legacyStepVisuals.map((visual) => (
-              <div className="flex h-[96px] items-center justify-center" key={visual.key}>
-                {visual}
-              </div>
-            ))}
-          </div>
-
-          <div className="relative mt-2 grid grid-cols-5 gap-0">
-            <div className="absolute left-[10%] right-[10%] top-[18px] grid grid-cols-4 gap-0">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div
-                  className={`h-[3px] ${getStepLineClassName(stepStatuses[index] ?? "disabled", stepStatuses[index + 1] ?? "disabled")}`}
-                  key={`step-line-${index + 1}`}
-                />
+        <div className="overflow-x-auto overflow-y-hidden">
+          <div className="mx-auto min-w-[400px] max-w-[1120px]">
+            <div className="grid grid-cols-5 items-center">
+              {legacyStepVisuals.map((visual) => (
+                <div className="flex h-[64px] items-center justify-center px-1 md:h-[96px] md:px-0" key={visual.key}>
+                  {visual}
+                </div>
               ))}
             </div>
-            {STEP_CARDS.map((step, index) => (
-              <div className="relative z-10 flex flex-col items-center" key={`${step.number}-meta`}>
-                <div
-                  className={[
-                    "flex h-9 w-9 items-center justify-center rounded-full text-base font-semibold text-white",
-                    getStepCircleClassName(stepStatuses[index] ?? "disabled")
-                  ].join(" ")}
-                >
-                  {step.number}
-                </div>
-                <div className="mt-3 min-h-[48px] whitespace-pre-line text-center text-base font-medium leading-6 text-black">{STEP_TITLE_OVERRIDES[currentDocument.type]?.[step.number] ?? step.title}</div>
+
+            <div className="relative mt-2 grid grid-cols-5 gap-0">
+              <div className="absolute left-[10%] right-[10%] top-[14px] grid grid-cols-4 md:top-[18px] gap-0">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    className={`h-[3px] ${getStepLineClassName(stepStatuses[index] ?? "disabled", stepStatuses[index + 1] ?? "disabled")}`}
+                    key={`step-line-${index + 1}`}
+                  />
+                ))}
               </div>
-            ))}
+              {STEP_CARDS.map((step, index) => (
+                <div className="relative z-10 flex flex-col items-center" key={`${step.number}-meta`}>
+                  <div
+                    className={[
+                      "flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold text-white md:h-9 md:w-9 md:text-base",
+                      getStepCircleClassName(stepStatuses[index] ?? "disabled")
+                    ].join(" ")}
+                  >
+                    {step.number}
+                  </div>
+                  <div className="mt-2 min-h-[32px] whitespace-pre-line px-1 text-center text-xs font-medium leading-4 text-black md:mt-3 md:min-h-[48px] md:px-0 md:text-base md:leading-6">{STEP_TITLE_OVERRIDES[currentDocument.type]?.[step.number] ?? step.title}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="mt-16">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-8">
+          <div className="flex flex-col gap-4 md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-8">
             <div className="min-w-0">
               <SelectedActionBar
+                code={documentCode}
                 deleteIcon={<DeleteIcon className="h-6 w-6" />}
                 editIcon={<EditIcon className="h-6 w-6" />}
                 hideDelete={!canDelete}
@@ -340,18 +343,18 @@ export function DocumentDetailContent({
                   setIsDeleteOpen(true);
                 }}
                 onEdit={() => setIsEditOpen(true)}
-                title={`${documentCode} ${documentTitle}`}
+                title={documentTitle}
               />
             </div>
 
-            <div className="flex shrink-0 items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 md:shrink-0 md:flex-nowrap md:gap-4">
               <a
-                className="flex items-center gap-2 text-base font-medium text-gray-500 transition hover:text-black"
+                className="flex h-10 items-center gap-2 rounded-2xl border border-gray-200 px-4 text-sm font-medium text-gray-500 transition hover:text-black md:h-auto md:rounded-none md:border-0 md:px-0 md:text-base"
                 href={DOCUMENT_FORMS_URL}
                 rel="noreferrer"
                 target="_blank"
               >
-                <InfoIcon className="h-6 w-6" />
+                <InfoIcon className="h-5 w-5 md:h-6 md:w-6" />
                 <span>ฟอร์มเอกสาร</span>
               </a>
               {currentDocument.type === "7" && canEdit ? (
@@ -399,7 +402,7 @@ export function DocumentDetailContent({
                     {group.filings.map((filing) => (
                       <article className="overflow-hidden rounded-2xl bg-gray-100" key={filing.id}>
                         <div className={hasFilingDetailPanel(filing) ? "grid xl:grid-cols-[300px_minmax(0,1fr)]" : "grid"}>
-                          <div className={`space-y-7 px-7 pb-3 pt-6 xl:py-6 ${hasFilingDetailPanel(filing) ? "xl:border-r xl:border-gray-300" : ""}`}>
+                          <div className={`space-y-7 px-4 pb-3 pt-6 md:px-7 xl:py-6 ${hasFilingDetailPanel(filing) ? "xl:border-r xl:border-gray-300" : ""}`}>
                             <div className="flex items-start gap-4">
                               <ProfileAvatar className="h-12 w-12" role={isStaffAction(filing) ? "secretary" : "student"} />
                               <div className="min-w-0">
@@ -415,7 +418,7 @@ export function DocumentDetailContent({
                           </div>
 
                           {hasFilingDetailPanel(filing) ? (
-                            <div className="space-y-5 px-7 pb-6 pt-3 xl:py-6">
+                            <div className="space-y-5 px-4 pb-6 pt-3 md:px-7 xl:py-6">
                               <div className="min-w-0 space-y-2">
                                 <div className="text-base font-semibold text-black">ไฟล์แนบ</div>
                                 <div className="flex max-w-full flex-wrap gap-2">
