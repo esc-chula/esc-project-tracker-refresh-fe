@@ -50,43 +50,7 @@ export function DocumentTable({
   const [visiblePhoneRows, setVisiblePhoneRows] = useState<Record<string, boolean>>({});
 
   return (
-    <>
-      <div className="space-y-3 md:hidden">
-        {isLoading ? (
-          <div className="flex min-h-40 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-500" />
-          </div>
-        ) : documents.length > 0 ? (
-          documents.map((document) => (
-            <button
-              className="block w-full rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
-              key={document.id}
-              onClick={() => router.push(getDocumentRoute(document))}
-              type="button"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <span className="min-w-0 truncate text-sm font-semibold text-black">
-                  {document.projectCode}-{document.documentCode}
-                </span>
-                <span className={`shrink-0 text-xs font-medium ${getDocumentStatusClassName(document.displayStatus ?? document.status)}`}>
-                  {getDocumentDisplayStatusLabel(document.displayStatus ?? document.status)}
-                </span>
-              </div>
-              <p className="mt-2 line-clamp-2 text-sm font-medium text-black">
-                {document.name || getDocumentTypeLabel(document.type, document.subType)}
-              </p>
-              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
-                <span className="min-w-0 truncate">{document.owner?.displayName || "-"}</span>
-                <span className="shrink-0">{formatUpdatedAt(document.updatedAt)}</span>
-              </div>
-            </button>
-          ))
-        ) : (
-          <div className="rounded-2xl border border-dashed border-gray-300 px-4 py-10 text-center text-sm text-gray-500">{emptyText}</div>
-        )}
-      </div>
-
-      <DataTable className="hidden md:block" tableClassName="table-fixed">
+    <DataTable tableClassName="min-w-[1000px] table-fixed xl:min-w-0">
       <colgroup>
         {documentColumnWidths.map((width, index) => (
           <col key={`document-column-${index}`} style={{ width }} />

@@ -53,7 +53,7 @@ export default function Loading() {
             title="เอกสารล่าสุด"
           />
 
-          <DataTable tableClassName="table-fixed">
+          <DataTable tableClassName="min-w-[1000px] table-fixed xl:min-w-0">
             <colgroup>
               {documentColumnWidths.map((width, index) => (
                 <col key={`home-loading-document-column-${index}`} style={{ width }} />

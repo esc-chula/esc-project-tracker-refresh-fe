@@ -7,8 +7,8 @@ import { PageToolbar } from "@/components/ui/page-toolbar";
 
 function FilterPill({ label }: { label: string }) {
   return (
-    <div className="inline-flex h-9 min-w-[72px] items-center rounded-full bg-gray-100 px-4 text-sm text-black md:h-10 md:min-w-[88px] md:px-5 md:text-base">
-      {label}
+    <div className="inline-flex h-9 min-w-[72px] max-w-full items-center rounded-full bg-gray-100 px-4 text-sm text-black md:h-10 md:min-w-[88px] md:px-5 md:text-base">
+      <span className="truncate">{label}</span>
     </div>
   );
 }
@@ -19,11 +19,11 @@ export default function Loading() {
       <div className="space-y-8">
         <PageToolbar
           action={
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <DocumentProcessLink />
-              <Button type="button" variant="appRed">
+              <Button className="min-w-0" type="button" variant="appRed">
                 <Plus className="h-5 w-5" strokeWidth={2.5} />
-                เปิดโครงการใหม่
+                <span className="truncate">เปิดโครงการใหม่</span>
               </Button>
             </div>
           }

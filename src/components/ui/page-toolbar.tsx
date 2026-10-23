@@ -22,7 +22,9 @@ export function PageToolbar({
 
       {controls || trailing ? (
         <div className="flex flex-wrap items-center justify-between gap-2 md:gap-3">
-          <div className="flex flex-wrap items-center gap-2 md:gap-3">{controls}</div>
+          <div className="grid w-full grid-cols-2 justify-items-start gap-2 md:flex md:w-auto md:flex-wrap md:items-center md:gap-3 [&>*]:min-w-0 [&>*]:max-w-full">
+            {controls}
+          </div>
           {trailing ? <div className="flex items-center gap-2 md:gap-3">{trailing}</div> : null}
         </div>
       ) : null}
