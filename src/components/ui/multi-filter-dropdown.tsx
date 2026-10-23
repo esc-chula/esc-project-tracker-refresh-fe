@@ -190,7 +190,7 @@ export function MultiFilterDropdown({
     <>
       <div className={cn("relative", className)} ref={containerRef}>
         <Button
-          className="h-9 min-w-[72px] justify-between rounded-full bg-gray-100 px-4 text-sm font-normal text-black hover:bg-gray-200 md:h-10 md:min-w-[88px] md:px-5 md:text-base"
+          className="h-9 min-w-[72px] max-w-full justify-between rounded-full bg-gray-100 px-4 text-sm font-normal text-black hover:bg-gray-200 md:h-10 md:min-w-[88px] md:px-5 md:text-base"
           onClick={() => setOpen((currentOpen) => !currentOpen)}
           type="button"
           variant="ghost"

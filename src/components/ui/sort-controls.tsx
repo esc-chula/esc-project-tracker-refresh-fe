@@ -63,12 +63,12 @@ export function SortControls<T extends string>({
   return (
     <div className="relative" ref={containerRef}>
       <button
-        className="inline-flex h-9 items-center gap-2 rounded-full bg-gray-100 px-4 text-sm font-normal text-black transition hover:bg-gray-200 md:h-10 md:px-5 md:text-base"
+        className="inline-flex h-9 max-w-full items-center gap-2 rounded-full bg-gray-100 px-4 text-sm font-normal text-black transition hover:bg-gray-200 md:h-10 md:px-5 md:text-base"
         onClick={() => setOpen((currentOpen) => !currentOpen)}
         type="button"
       >
-        <span>{triggerLabel}</span>
-        <ArrowDown className={cn("h-4 w-4 transition-transform", open && "rotate-180")} strokeWidth={2.2} />
+        <span className="truncate">{triggerLabel}</span>
+        <ArrowDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")} strokeWidth={2.2} />
       </button>
 
       {open ? (

@@ -152,12 +152,12 @@ export function DocumentsExplorer({
       <PageToolbar
         action={
           onCreateClick || leadingAction ? (
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               {leadingAction ?? <DocumentProcessLink />}
               {onCreateClick ? (
-                <Button onClick={onCreateClick} type="button" variant="appRed">
+                <Button className="min-w-0" onClick={onCreateClick} type="button" variant="appRed">
                   <Plus className="h-5 w-5" strokeWidth={2.5} />
-                  {createButtonLabel}
+                  <span className="truncate">{createButtonLabel}</span>
                 </Button>
               ) : null}
             </div>
